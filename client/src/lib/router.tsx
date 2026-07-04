@@ -8,6 +8,8 @@ import SalaryManagementPage from "@/pages/admin/salary.page";
 import SignIn from "@/pages/auth/signIn";
 import Signup from "@/pages/auth/signup";
 import ForgotPassword from "@/pages/auth/forgotPassword";
+import Logout from "@/pages/auth/logout";
+import NotFound from "@/pages/error/NotFound";
 import HomePage from "@/pages/home.page";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import GuestRoute from "@/components/GuestRoute";
@@ -108,12 +110,20 @@ export const router = createBrowserRouter([
       },
       {
         path: "admin/payroll",
-        element: (
-          <ProtectedRoute allowedRoles={["HR"]}>
-            <SalaryManagementPage />
-          </ProtectedRoute>
-        ),
+        element: <PlaceholderPage title="Payroll" />,
       },
+      {
+        path: "signin",
+        element: <SignIn />
+      },
+      {
+        path: "signup",
+        element: <Signup />
+      },
+      {
+        path: "forgot-password",
+        element: <ForgotPassword />
+      }
     ],
   },
 ]);
