@@ -1,11 +1,9 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/context/auth-context";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { InitialsAvatar } from "@/components/ui/initials-avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Users,
@@ -17,7 +15,6 @@ import {
   Phone,
   Mail,
   MapPin,
-  Calendar,
   Briefcase,
 } from "lucide-react";
 import {

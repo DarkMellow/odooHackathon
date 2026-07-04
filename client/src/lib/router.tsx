@@ -5,16 +5,31 @@ import EmployeesPage from "@/pages/admin/employees.page";
 import AttendanceRecordsPage from "@/pages/admin/attendance.page";
 import LeaveApprovalsPage from "@/pages/admin/leave.page";
 import SalaryManagementPage from "@/pages/admin/salary.page";
+import SignIn from "@/pages/auth/signIn";
+import Signup from "@/pages/auth/signup";
+import ForgotPassword from "@/pages/auth/forgotPassword";
+import HomePage from "@/pages/home.page";
 
 export const router = createBrowserRouter([
   {
     path: "/",
+    element: <HomePage />,
+  },
+  {
+    path: "/signin",
+    element: <SignIn />,
+  },
+  {
+    path: "/signup",
+    element: <Signup />,
+  },
+  {
+    path: "/forgot-password",
+    element: <ForgotPassword />,
+  },
+  {
     element: <AppLayout />,
     children: [
-      {
-        index: true,
-        element: <Navigate to="/dashboard" replace />,
-      },
       {
         path: "dashboard",
         element: <EmployeeDashboardPage />,
