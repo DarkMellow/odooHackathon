@@ -426,7 +426,7 @@ graph LR
 ```
 
 ### 7.1 Local Development Workflow
-1. **PNPM Monorepo Setup**: Run `pnpm dev` from the project root to run client (Vite, port 5173) and server (Express, port 3000) concurrently.
+1. **NPM Workspace Setup**: Run `npm run dev` from the project root to run client (Vite, port 5173) and server (Express, port 3000) concurrently.
 2. **Database Initialization**: Run `npx prisma db push` locally to generate schema blueprints in a development MySQL instance.
 
 ### 7.2 Deployment Environment Design

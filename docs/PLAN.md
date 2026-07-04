@@ -181,7 +181,7 @@ Release production builds of client bundles and server assets into highly availa
 
 ### 8.2 Developer Task List
 1. **Vite Build Verification**:
-   - Run compilation checks (`pnpm build`) locally to confirm bundle builds output correctly without type warnings.
+   - Run compilation checks (`npm run build`) locally to confirm bundle builds output correctly without type warnings.
 2. **Dockerization (Server)**:
    - Construct `/server/Dockerfile` utilizing slim Node-Alpine layers. Verify that server ports bind correctly under production environment variables.
 3. **Cloud Infrastructure Provisioning**:
