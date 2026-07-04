@@ -18,6 +18,17 @@ export const updateProfileSchema = z.object({
     .trim()
     .optional()
     .nullable(),
+  dob: z
+    .string()
+    .optional()
+    .nullable()
+    .transform((val) => (val ? new Date(val) : null)),
+  emergencyContact: z
+    .string()
+    .max(255, 'Emergency contact must not exceed 255 characters')
+    .trim()
+    .optional()
+    .nullable(),
 });
 
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;

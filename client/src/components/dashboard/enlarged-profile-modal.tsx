@@ -240,12 +240,16 @@ export function EnlargedProfileModal({
                     <span className="block text-foreground font-medium text-sm">{formatDate(employee.dob)}</span>
                   </div>
                   <div className="space-y-1">
-                    <span className="block font-semibold text-muted-foreground">Nationality</span>
-                    <span className="block text-foreground font-medium text-sm">Not Available</span>
+                    <span className="block font-semibold text-muted-foreground">Phone Number</span>
+                    <span className="block text-foreground font-medium text-sm">{employee.phone || "Not Available"}</span>
                   </div>
                   <div className="space-y-1">
                     <span className="block font-semibold text-muted-foreground">Personal Email</span>
                     <span className="block text-foreground font-medium text-sm">{employee.email || "Not Available"}</span>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="block font-semibold text-muted-foreground">Emergency Contact</span>
+                    <span className="block text-foreground font-medium text-sm">{employee.emergencyContact || "Not Available"}</span>
                   </div>
                   <div className="space-y-1">
                     <span className="block font-semibold text-muted-foreground">Gender</span>
@@ -258,6 +262,10 @@ export function EnlargedProfileModal({
                   <div className="space-y-1">
                     <span className="block font-semibold text-muted-foreground">Date of Joining</span>
                     <span className="block text-foreground font-medium text-sm">{formatDate(employee.dateOfJoining)}</span>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="block font-semibold text-muted-foreground">Nationality</span>
+                    <span className="block text-foreground font-medium text-sm">Not Available</span>
                   </div>
                   <div className="space-y-1 sm:col-span-2">
                     <span className="block font-semibold text-muted-foreground">Residing Address</span>

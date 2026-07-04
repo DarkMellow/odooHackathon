@@ -16,6 +16,8 @@ import {
   Mail,
   MapPin,
   Briefcase,
+  Calendar,
+  Shield,
 } from "lucide-react";
 import { EnlargedProfileModal } from "@/components/dashboard/enlarged-profile-modal";
 
@@ -345,7 +347,7 @@ export function EmployeesPage() {
                     {selectedEmployee.attendanceStatus}
                   </Badge>
                   <span className="text-xs text-muted-foreground">
-                    Joined Jan 2026
+                    Joined {selectedEmployee.dateOfJoining ? new Date(selectedEmployee.dateOfJoining).toLocaleDateString("en-US", { year: "numeric", month: "short" }) : "Jan 2026"}
                   </span>
                 </div>
               </div>
@@ -367,11 +369,19 @@ export function EmployeesPage() {
                     </p>
                     <p className="flex items-center gap-2">
                       <Phone className="size-3.5 text-muted-foreground shrink-0" />
-                      <span>+1 (555) 012-3456</span>
+                      <span>{selectedEmployee.phone || "Not Provided"}</span>
                     </p>
                     <p className="flex items-center gap-2">
                       <MapPin className="size-3.5 text-muted-foreground shrink-0" />
-                      <span>42 Elm Street, San Francisco, CA</span>
+                      <span>{selectedEmployee.address || "Not Provided"}</span>
+                    </p>
+                    <p className="flex items-center gap-2">
+                      <Calendar className="size-3.5 text-muted-foreground shrink-0" />
+                      <span>DOB: {selectedEmployee.dob ? new Date(selectedEmployee.dob).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }) : "Not Provided"}</span>
+                    </p>
+                    <p className="flex items-center gap-2">
+                      <Shield className="size-3.5 text-muted-foreground shrink-0" />
+                      <span>Emergency: {selectedEmployee.emergencyContact || "Not Provided"}</span>
                     </p>
                   </div>
                 </div>
@@ -383,7 +393,7 @@ export function EmployeesPage() {
                   </h4>
                   <p className="text-foreground/90 flex items-center gap-1.5">
                     <span className="size-1.5 rounded-full bg-primary" />
-                    Alex Rivera
+                    {selectedEmployee.reportingManager || "None Assigned"}
                   </p>
                 </div>
               </div>

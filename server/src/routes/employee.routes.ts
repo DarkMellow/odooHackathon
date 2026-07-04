@@ -60,6 +60,12 @@ router.get(
             isVerified: true,
             createdAt: true,
             updatedAt: true,
+            salaryStructures: {
+              orderBy: {
+                effectiveDate: 'desc',
+              },
+              take: 1,
+            },
           },
         },
       },
@@ -110,7 +116,7 @@ router.put(
     }
 
     // Extract only permitted fields for updating
-    const { phone, address, profilePictureUrl } = req.body;
+    const { phone, address, profilePictureUrl, dob, emergencyContact } = req.body;
 
     const updatedProfile = await prisma.profile.update({
       where: { userId },
@@ -118,6 +124,8 @@ router.put(
         phone,
         address,
         profilePictureUrl,
+        dob,
+        emergencyContact,
       },
       include: {
         user: {
@@ -129,6 +137,12 @@ router.put(
             isVerified: true,
             createdAt: true,
             updatedAt: true,
+            salaryStructures: {
+              orderBy: {
+                effectiveDate: 'desc',
+              },
+              take: 1,
+            },
           },
         },
       },

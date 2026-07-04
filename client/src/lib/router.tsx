@@ -4,6 +4,7 @@ import EmployeeDashboardPage from "@/pages/employee/dashboard.page";
 import EmployeesPage from "@/pages/admin/employees.page";
 import AttendanceRecordsPage from "@/pages/admin/attendance.page";
 import LeaveApprovalsPage from "@/pages/admin/leave.page";
+import EmployeeProfilePage from "@/pages/employee/profile.page";
 import SignIn from "@/pages/auth/signIn";
 import Signup from "@/pages/auth/signup";
 import ForgotPassword from "@/pages/auth/forgotPassword";
@@ -95,7 +96,7 @@ export const router = createBrowserRouter([
       // Placeholder routes — pages to be built in upcoming phases
       {
         path: "profile",
-        element: <PlaceholderPage title="Profile" />,
+        element: <EmployeeProfilePage />,
       },
       {
         path: "attendance",
