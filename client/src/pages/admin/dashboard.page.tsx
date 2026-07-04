@@ -394,7 +394,7 @@ export function AdminDashboardPage() {
                       <td className="px-5 py-4">
                         <Badge
                           variant="secondary"
-                          className={statusColors[emp.attendanceStatus]}
+                          className={statusColors[emp.attendanceStatus as keyof typeof statusColors]}
                         >
                           {emp.attendanceStatus.replace("_", " ")}
                         </Badge>

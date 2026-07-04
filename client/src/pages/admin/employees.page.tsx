@@ -24,6 +24,7 @@ const statusColors = {
   ABSENT: "bg-destructive/15 text-destructive border-0",
   HALF_DAY: "bg-warning/15 text-warning border-0",
   LEAVE: "bg-info/15 text-info border-0",
+  PENDING: "bg-muted text-muted-foreground border-0",
 } as const;
 
 const BANNER_COLORS = [
@@ -107,28 +108,53 @@ export function EmployeesPage() {
   const departments = ["All", ...new Set(employees.map((e) => e.department))];
 
   // Actions
-  const handleCreateEmployee = (e: React.FormEvent) => {
+  const handleCreateEmployee = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newEmpName || !newEmpId || !newEmpDept || !newEmpDesg) return;
 
-    const newEmp: MockEmployeeListItem = {
-      id: Date.now(),
-      employeeId: newEmpId,
-      fullName: newEmpName,
-      department: newEmpDept,
-      designation: newEmpDesg,
-      attendanceStatus: "ABSENT",
-      checkIn: null,
-      checkOut: null,
-    };
+    try {
+      const response = await fetch("/api/employee/pre-register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          fullName: newEmpName,
+          employeeId: newEmpId,
+          department: newEmpDept,
+          designation: newEmpDesg,
+        }),
+      });
 
-    setEmployees((prev) => [newEmp, ...prev]);
-    setNewEmployeeModalOpen(false);
-    // Reset form
-    setNewEmpName("");
-    setNewEmpId("");
-    setNewEmpDept("");
-    setNewEmpDesg("");
+      const data = await response.json();
+      if (data.success) {
+        const newEmp = {
+          id: data.employee.id,
+          employeeId: data.employee.employeeId,
+          fullName: data.employee.fullName,
+          department: data.employee.department,
+          designation: data.employee.designation,
+          attendanceStatus: "PENDING",
+          checkIn: null,
+          checkOut: null,
+          email: "Pending Registration",
+          isRegistered: false,
+        };
+
+        setEmployees((prev) => [newEmp, ...prev]);
+        setNewEmployeeModalOpen(false);
+        // Reset form
+        setNewEmpName("");
+        setNewEmpId("");
+        setNewEmpDept("");
+        setNewEmpDesg("");
+      } else {
+        alert(data.message || "Failed to create employee");
+      }
+    } catch (err) {
+      console.error("Failed to create employee", err);
+      alert("Failed to create employee");
+    }
   };
 
   const filteredEmployees = employees.filter((emp) => {
@@ -255,7 +281,7 @@ export function EmployeesPage() {
 
               <div className="flex items-center justify-between text-xs border-t pt-3 border-border/40">
                 <span className="text-muted-foreground">{emp.department}</span>
-                <Badge className={statusColors[emp.attendanceStatus]}>
+                <Badge className={statusColors[emp.attendanceStatus as keyof typeof statusColors]}>
                   {emp.attendanceStatus}
                 </Badge>
               </div>
@@ -315,7 +341,7 @@ export function EmployeesPage() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <Badge className={cn(statusColors[selectedEmployee.attendanceStatus], "text-[10px] font-bold py-0.5")}>
+                  <Badge className={cn(statusColors[selectedEmployee.attendanceStatus as keyof typeof statusColors], "text-[10px] font-bold py-0.5")}>
                     {selectedEmployee.attendanceStatus}
                   </Badge>
                   <span className="text-xs text-muted-foreground">
@@ -337,7 +363,7 @@ export function EmployeesPage() {
                     </p>
                     <p className="flex items-center gap-2">
                       <Mail className="size-3.5 text-muted-foreground shrink-0" />
-                      <span>{selectedEmployee.fullName.toLowerCase().replace(" ", "")}@company.com</span>
+                      <span>{selectedEmployee.email}</span>
                     </p>
                     <p className="flex items-center gap-2">
                       <Phone className="size-3.5 text-muted-foreground shrink-0" />

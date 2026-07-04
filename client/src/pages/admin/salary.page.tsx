@@ -269,7 +269,7 @@ export function SalaryManagementPage() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <Badge className={cn(statusColors[selectedEmployee.attendanceStatus], "text-[10px] font-bold py-0.5")}>
+                  <Badge className={cn(statusColors[selectedEmployee.attendanceStatus as keyof typeof statusColors], "text-[10px] font-bold py-0.5")}>
                     {selectedEmployee.attendanceStatus}
                   </Badge>
                   <span className="text-xs text-muted-foreground">

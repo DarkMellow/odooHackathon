@@ -64,6 +64,33 @@ router.post(
       });
     }
 
+    // Validate against PreRegisteredEmployee
+    const preRegistered = await prisma.preRegisteredEmployee.findUnique({
+      where: { employeeId },
+    });
+
+    if (!preRegistered) {
+      return res.status(400).json({
+        success: false,
+        message: 'Employee ID is not pre-registered. Please contact HR.',
+      });
+    }
+
+    // Check if name matches (case-insensitive and trimmed)
+    if (preRegistered.fullName.trim().toLowerCase() !== fullName.trim().toLowerCase()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Employee ID and Full Name do not match our HR records.',
+      });
+    }
+
+    if (preRegistered.isRegistered) {
+      return res.status(409).json({
+        success: false,
+        message: 'This employee ID is already registered.',
+      });
+    }
+
     // Hash the password
     const passwordHash = await hashPassword(password);
 
@@ -79,7 +106,7 @@ router.post(
           employeeId,
           email,
           passwordHash,
-          role,
+          role: preRegistered.role, // Enforce the role HR assigned
           isVerified: false,
         },
       });
@@ -87,7 +114,9 @@ router.post(
       await tx.profile.create({
         data: {
           userId: user.id,
-          fullName,
+          fullName: preRegistered.fullName, // Enforce pre-registered name
+          department: preRegistered.department,
+          designation: preRegistered.designation,
         },
       });
 
@@ -97,6 +126,11 @@ router.post(
           token: verificationToken,
           expiresAt,
         },
+      });
+
+      await tx.preRegisteredEmployee.update({
+        where: { employeeId },
+        data: { isRegistered: true },
       });
 
       return user;

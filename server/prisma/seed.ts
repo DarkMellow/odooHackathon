@@ -74,10 +74,23 @@ async function main() {
   await prisma.leaveRequest.deleteMany();
   await prisma.profile.deleteMany();
   await prisma.user.deleteMany();
+  await prisma.preRegisteredEmployee.deleteMany();
 
   // Create hash passwords
   const adminPasswordHash = await bcrypt.hash('AdminPass123!', 12);
   const employeePasswordHash = await bcrypt.hash('EmployeePass123!', 12);
+
+  // Pre-register seeded users
+  await prisma.preRegisteredEmployee.createMany({
+    data: [
+      { employeeId: 'EMP202600', fullName: 'Alex Rivera', department: 'Human Resources', designation: 'HR Manager', role: 'HR', isRegistered: true },
+      { employeeId: 'EMP202601', fullName: 'Jane Doe', department: 'Engineering', designation: 'Senior Frontend Engineer', role: 'EMPLOYEE', isRegistered: true },
+      { employeeId: 'EMP202603', fullName: 'John Smith', department: 'Engineering', designation: 'Backend Tech Lead', role: 'EMPLOYEE', isRegistered: true },
+      { employeeId: 'EMP202604', fullName: 'Emily Davis', department: 'Design', designation: 'Product Designer', role: 'EMPLOYEE', isRegistered: true },
+      { employeeId: 'EMP202605', fullName: 'Michael Brown', department: 'Marketing', designation: 'Growth Specialist', role: 'EMPLOYEE', isRegistered: true },
+      { employeeId: 'EMP202606', fullName: 'Sarah Connor', department: 'Operations', designation: 'Operations Lead', role: 'EMPLOYEE', isRegistered: true },
+    ]
+  });
 
   // 1. Create Alex Rivera (HR Manager)
   const alex = await prisma.user.create({

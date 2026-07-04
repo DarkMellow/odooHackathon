@@ -149,3 +149,17 @@ model RefreshToken {
 
   @@map("refresh_tokens")
 }
+
+model PreRegisteredEmployee {
+  id           Int      @id @default(autoincrement()) @db.UnsignedInt
+  employeeId   String   @unique @map("employee_id") @db.VarChar(50)
+  fullName     String   @map("full_name") @db.VarChar(255)
+  department   String   @db.VarChar(100)
+  designation  String   @db.VarChar(100)
+  role         Role     @default(EMPLOYEE)
+  isRegistered Boolean  @default(false) @map("is_registered")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamp
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamp
+
+  @@map("pre_registered_employees")
+}
