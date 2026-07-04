@@ -4,6 +4,7 @@ import EmployeeDashboardPage from "@/pages/employee/dashboard.page";
 import EmployeesPage from "@/pages/admin/employees.page";
 import AttendanceRecordsPage from "@/pages/admin/attendance.page";
 import LeaveApprovalsPage from "@/pages/admin/leave.page";
+import SalaryManagementPage from "@/pages/admin/salary.page";
 import SignIn from "@/pages/auth/signIn";
 import Signup from "@/pages/auth/signup";
 import ForgotPassword from "@/pages/auth/forgotPassword";
@@ -96,7 +97,7 @@ export const router = createBrowserRouter([
         path: "admin/payroll",
         element: (
           <ProtectedRoute allowedRoles={["HR"]}>
-            <PlaceholderPage title="Payroll" />
+            <SalaryManagementPage />
           </ProtectedRoute>
         ),
       },
