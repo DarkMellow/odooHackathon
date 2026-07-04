@@ -2,22 +2,7 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 import { InitialsAvatar } from "@/components/ui/initials-avatar";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  X,
-  Plus,
-  Briefcase,
-  Mail,
-  Phone,
-  MapPin,
-  Calendar,
-  Lock,
-  Edit2,
-  FileText,
-  DollarSign,
-  User,
-  Info,
-} from "lucide-react";
+import { X } from "lucide-react";
 import type { MockEmployeeListItem } from "@/data/mock";
 
 interface EnlargedProfileModalProps {
@@ -32,13 +17,13 @@ export function EnlargedProfileModal({
   const [activeTab, setActiveTab] = React.useState<"resume" | "private" | "salary">("resume");
 
   // Resume State (Read-only for HR view)
-  const [skills, setSkills] = React.useState<string[]>(["React", "TypeScript", "Tailwind CSS", "Vite", "Node.js"]);
-  const [certs, setCerts] = React.useState<string[]>(["AWS Certified Cloud Practitioner", "Scrum Alliance CSM"]);
+  const [skills] = React.useState<string[]>(["React", "TypeScript", "Tailwind CSS", "Vite", "Node.js"]);
+  const [certs] = React.useState<string[]>(["AWS Certified Cloud Practitioner", "Scrum Alliance CSM"]);
 
   // Salary Calculations State (Interactive)
   const [monthWage, setMonthWage] = React.useState<number>(50000);
   const [pfRate, setPfRate] = React.useState<number>(12);
-  const [profTax, setProfTax] = React.useState<number>(200);
+  const [profTax] = React.useState<number>(200);
 
   // Stateful Salary Component Rates (%)
   const [basicRate, setBasicRate] = React.useState<number>(50);
@@ -315,7 +300,7 @@ export function EnlargedProfileModal({
                   <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">
                     Wage Configuration
                   </h3>
-                  
+
                   <div className="space-y-3">
                     <div className="space-y-1">
                       <label className="text-xs font-semibold text-muted-foreground">Month Wage (INR)</label>
@@ -350,7 +335,7 @@ export function EnlargedProfileModal({
                   <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">
                     Working Schedule
                   </h3>
-                  
+
                   <div className="grid grid-cols-2 gap-4 text-xs">
                     <div>
                       <span className="block font-semibold text-muted-foreground">Workdays per week</span>
@@ -375,7 +360,7 @@ export function EnlargedProfileModal({
                   <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">
                     Salary Components
                   </h3>
-                  
+
                   <div className="space-y-3.5 text-xs">
                     <div className="flex items-center justify-between border-b border-border/40 pb-2">
                       <div>
@@ -488,7 +473,7 @@ export function EnlargedProfileModal({
                     <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">
                       Provident Fund (PF) Contribution
                     </h3>
-                    
+
                     <div className="space-y-3 text-xs">
                       <div className="flex items-center justify-between border-b border-border/40 pb-2">
                         <div>
@@ -537,7 +522,7 @@ export function EnlargedProfileModal({
                     <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">
                       Tax Deductions
                     </h3>
-                    
+
                     <div className="flex items-center justify-between text-xs">
                       <div>
                         <span className="font-semibold text-foreground block">Professional Tax</span>

@@ -118,3 +118,15 @@ This document serves as a straightforward manual testing guideline for checking 
   - The browser cookies `accessToken` and `refreshToken` are cleared.
   - The user is redirected to `/signin`.
   - Trying to navigate back to `/dashboard` redirects to `/signin`.
+
+---
+
+## 6. Development / QA Bypass Access (Hotkey Trigger)
+
+### Test Case 6.1: Universal Authentication Bypass
+- **Action**: From the Sign-In page, Sign-Up page, or home page, press the `"s"` (or `"S"`) key on your keyboard (ensuring no input field is currently active/focused).
+- **Expected Result**: 
+  - A pulsing amber banner displays in the bottom-right corner: `"Bypass Mode Active (Press 'S' to exit)"`.
+  - The system automatically logs you in as a mock HR Admin (`Alex Rivera (Bypass Mode)`).
+  - You can immediately navigate to protected layouts (e.g., `/dashboard`, `/admin/employees`, `/admin/payroll`) without credentials.
+  - Pressing `"s"` or `"S"` again exits bypass mode, clears the banner, and redirects you back to `/signin` (or restores your real session if one was active).

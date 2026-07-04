@@ -22,6 +22,7 @@ import {
   X,
   Sun,
   Moon,
+  Banknote,
 } from "lucide-react";
 import * as React from "react";
 

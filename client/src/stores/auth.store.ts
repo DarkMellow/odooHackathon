@@ -14,6 +14,10 @@ interface AuthState {
   checkAuth: () => Promise<AuthUser | null>;
   setError: (error: string | null) => void;
   setRole: (role: Role) => void; // Allow local view-role toggling
+  bypassActive: boolean;
+  realUser: AuthUser | null;
+  realIsAuthenticated: boolean;
+  toggleBypass: () => void;
 }
 
 // Helper to handle API responses and throw detailed errors
@@ -80,13 +84,65 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isAuthenticated: false,
   isLoading: false,
   error: null,
+  bypassActive: false,
+  realUser: null,
+  realIsAuthenticated: false,
 
   setError: (error) => set({ error }),
 
   setRole: (role) => set({ role }),
 
+  toggleBypass: () => {
+    const state = get();
+    if (state.bypassActive) {
+      // Deactivate bypass: Restore real session state
+      set({
+        bypassActive: false,
+        user: state.realUser,
+        role: state.realUser ? state.realUser.role : null,
+        isAuthenticated: state.realIsAuthenticated,
+        realUser: null,
+        realIsAuthenticated: false,
+      });
+    } else {
+      // Activate bypass: Stash real session state and inject mock HR Admin
+      const mockHRUser: AuthUser = {
+        id: 2,
+        employeeId: "EMP202600",
+        email: "hr@company.com",
+        role: "HR",
+        isVerified: true,
+        profile: {
+          id: 2,
+          userId: 2,
+          fullName: "Alex Rivera (Bypass Mode)",
+          dob: "1988-07-22",
+          phone: "+1 (555) 234-5678",
+          address: "100 Market Street, Suite 500, San Francisco, CA 94105",
+          emergencyContact: "Maria Rivera — +1 (555) 876-5432",
+          profilePictureUrl: null,
+          department: "Human Resources",
+          designation: "HR Manager (Bypass)",
+          dateOfJoining: "2022-06-01",
+          reportingManager: null,
+          createdAt: "2022-06-01T00:00:00.000Z",
+          updatedAt: "2026-07-01T00:00:00.000Z",
+        },
+      };
+
+      set({
+        bypassActive: true,
+        realUser: state.user,
+        realIsAuthenticated: state.isAuthenticated,
+        user: mockHRUser,
+        role: "HR",
+        isAuthenticated: true,
+      });
+    }
+  },
+
   login: async (email, password) => {
-    set({ isLoading: true, error: null });
+    set({ isLoading: true, error: null, bypassActive: false, realUser: null, realIsAuthenticated: false });
     try {
       // Step 1: Request login
       await fetchAPI("/api/auth/login", {
@@ -114,7 +170,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   logout: async () => {
-    set({ isLoading: true, error: null });
+    set({ isLoading: true, error: null, bypassActive: false, realUser: null, realIsAuthenticated: false });
     try {
       await fetchAPI("/api/auth/logout", {
         method: "POST",
@@ -159,8 +215,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   checkAuth: async () => {
-    // Only set loading if not already loaded to prevent screen flickering
     const current = get();
+
+    // If bypass is currently active, do not execute real API checks as it will reset state
+    if (current.bypassActive) {
+      return current.user;
+    }
+
+    // Only set loading if not already loaded to prevent screen flickering
     if (!current.user) {
       set({ isLoading: true, error: null });
     }
