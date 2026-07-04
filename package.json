@@ -4,10 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "concurrently -n \"server,client\" -c \"green,blue\" \"pnpm --prefix server dev\" \"pnpm --prefix client dev\"",
-    "build": "concurrently -n \"server,client\" -c \"green,blue\" \"pnpm --prefix server build\" \"pnpm --prefix client build\"",
-    "preview": "concurrently -n \"server,client\" -c \"green,blue\" \"pnpm --prefix server preview\" \"pnpm --prefix client preview\"",
-    "install-all": "concurrently -n \"server,client\" -c \"green,blue\" \"pnpm --prefix server install\" \"pnpm --prefix client install\"",
+    "dev": "concurrently -n \"server,client\" -c \"green,blue\" \"npm --prefix server run dev\" \"npm --prefix client run dev\"",
+    "build": "concurrently -n \"server,client\" -c \"green,blue\" \"npm --prefix server run build\" \"npm --prefix client run build\"",
+    "preview": "concurrently -n \"server,client\" -c \"green,blue\" \"npm --prefix server run preview\" \"npm --prefix client run preview\"",
+    "install-all": "concurrently -n \"server,client\" -c \"green,blue\" \"npm --prefix server install\" \"npm --prefix client install\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
