@@ -4,6 +4,7 @@ import EmployeeDashboardPage from "@/pages/employee/dashboard.page";
 import EmployeesPage from "@/pages/admin/employees.page";
 import AttendanceRecordsPage from "@/pages/admin/attendance.page";
 import LeaveApprovalsPage from "@/pages/admin/leave.page";
+import SalaryManagementPage from "@/pages/admin/salary.page";
 
 export const router = createBrowserRouter([
   {
@@ -49,7 +50,7 @@ export const router = createBrowserRouter([
       },
       {
         path: "admin/payroll",
-        element: <PlaceholderPage title="Payroll" />,
+        element: <SalaryManagementPage />,
       },
     ],
   },

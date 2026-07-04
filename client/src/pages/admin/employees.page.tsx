@@ -26,6 +26,7 @@ import {
 import type {
   MockEmployeeListItem,
 } from "@/data/mock";
+import { EnlargedProfileModal } from "@/components/dashboard/enlarged-profile-modal";
 
 const statusColors = {
   PRESENT: "bg-success/15 text-success border-0",
@@ -57,6 +58,7 @@ export function EmployeesPage() {
   
   // Modal State
   const [selectedEmployee, setSelectedEmployee] = React.useState<MockEmployeeListItem | null>(null);
+  const [enlargedEmployee, setEnlargedEmployee] = React.useState<MockEmployeeListItem | null>(null);
   const [newEmployeeModalOpen, setNewEmployeeModalOpen] = React.useState(false);
 
   // New Employee Form State
@@ -245,7 +247,10 @@ export function EmployeesPage() {
               {/* Maximize & Close buttons */}
               <div className="absolute top-3 right-3 flex items-center gap-2 z-10">
                 <button
-                  onClick={() => alert(`Enlarged profile panel for ${selectedEmployee.fullName}`)}
+                  onClick={() => {
+                    setEnlargedEmployee(selectedEmployee);
+                    setSelectedEmployee(null);
+                  }}
                   className="size-7 flex items-center justify-center rounded-full bg-black/20 hover:bg-black/40 text-white transition-colors"
                   title="Enlarge details panel"
                 >
@@ -421,6 +426,14 @@ export function EmployeesPage() {
             </form>
           </div>
         </div>
+      )}
+
+      {/* ─── Enlarged Profile Modal ───────────────────────── */}
+      {enlargedEmployee && (
+        <EnlargedProfileModal
+          employee={enlargedEmployee}
+          onClose={() => setEnlargedEmployee(null)}
+        />
       )}
     </div>
   );

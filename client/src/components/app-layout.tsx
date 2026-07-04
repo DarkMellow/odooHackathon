@@ -39,6 +39,7 @@ const adminNav = [
   { label: "Employees", icon: Users, to: "/admin/employees" },
   { label: "Attendance Records", icon: Clock, to: "/admin/attendance" },
   { label: "Leave Approvals", icon: ClipboardList, to: "/admin/leave" },
+  { label: "Salary Management", icon: Banknote, to: "/admin/payroll" },
 ] as const;
 
 // ─── Main layout ───────────────────────────────────────────────
