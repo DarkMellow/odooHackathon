@@ -7,6 +7,8 @@ import LeaveApprovalsPage from "@/pages/admin/leave.page";
 import SignIn from "@/pages/auth/signIn";
 import Signup from "@/pages/auth/signup";
 import ForgotPassword from "@/pages/auth/forgotPassword";
+import Logout from "@/pages/auth/logout";
+import NotFound from "@/pages/error/NotFound";
 
 export const router = createBrowserRouter([
   {
@@ -65,6 +67,14 @@ export const router = createBrowserRouter([
       {
         path: "forgot-password",
         element: <ForgotPassword />
+      },
+      {
+        path: "logout",
+        element: <Logout />
+      },
+      {
+        path: "*",
+        element: <NotFound />
       }
     ],
   },
