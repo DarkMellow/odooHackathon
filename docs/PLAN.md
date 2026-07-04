@@ -4,7 +4,7 @@
 **Document Owner:** Senior Full-Stack Engineer & Project Manager  
 **Status:** Approved  
 **Last Updated:** July 4, 2026  
-**Reference Docs:** [PRD (PRD.md)](file:///home/aditya/Documents/Projects/odooHackathon/docs/PRD.md) | [TRD (TRD.md)](file:///home/aditya/Documents/Projects/odooHackathon/docs/TRD.md) | [Schema (SCHEMA.md)](file:///home/aditya/Documents/Projects/odooHackathon/docs/SCHEMA.md) | [Design (DESIGN.md)](file:///home/aditya/Documents/Projects/odooHackathon/docs/DESIGN.md)
+**Reference Docs:** [PRD (PRD.md)](./PRD.md) | [TRD (TRD.md)](./TRD.md) | [Schema (SCHEMA.md)](./SCHEMA.md) | [Design (DESIGN.md)](./DESIGN.md)
 
 ---
 
@@ -18,7 +18,7 @@ Connect the application layer with the MySQL instance, map relational structures
    - Initialize Prisma under `/server`: run `npx prisma init` in the server root.
    - Configure the environment variables (`DATABASE_URL="mysql://user:pass@host:port/dbname"`) in `/server/.env`.
 2. **Schema Integration**:
-   - Copy the schema layout specified in [SCHEMA.md](file:///home/aditya/Documents/Projects/odooHackathon/docs/SCHEMA.md) into `/server/prisma/schema.prisma`.
+   - Copy the schema layout specified in [SCHEMA.md](./SCHEMA.md) into `/server/prisma/schema.prisma`.
 3. **Migration Execution**:
    - Generate local schema migrations: run `npx prisma migrate dev --name init_hrms_schema`.
 4. **Prisma Client Client Generation**:
@@ -75,7 +75,7 @@ Construct base page skeletons, global layout wrappers (`AppLayout`), routing mat
 2. **Route Guard Wrappers**:
    - Develop authentication wrappers (`ProtectedRoute.tsx`) that inspect local Zustands and redirect unauthenticated routes.
 3. **Navigation Sidebar / Bottom Nav Layout**:
-   - Complete `/client/src/components/app-layout.tsx`. Build a responsive sidebar (desktop) that collapses into a bottom navbar (mobile) matching the styles in [UI.md](file:///home/aditya/Documents/Projects/odooHackathon/docs/UI.md).
+   - Complete `/client/src/components/app-layout.tsx`. Build a responsive sidebar (desktop) that collapses into a bottom navbar (mobile) matching the styles in [UI.md](./UI.md).
 4. **Zustand Auth Store**:
    - Construct a global store `/client/src/stores/auth.store.ts` managing user session variables and active status keys.
 
@@ -204,7 +204,7 @@ Verify system constraints, clean empty states, optimize Largest Contentful Paint
 
 ### 9.2 Developer Task List
 1. **Empty State Coverage**:
-   - Ensure screens (such as empty logs or zero-result searches) render proper callouts matching [FLOW.md](file:///home/aditya/Documents/Projects/odooHackathon/docs/FLOW.md) specs.
+   - Ensure screens (such as empty logs or zero-result searches) render proper callouts matching [FLOW.md](./FLOW.md) specs.
 2. **Skeleton UI Optimization**:
    - Check skeleton placeholders to verify client views do not experience layout shifts as API responses load.
 3. **Performance Optimization (LCP/INP)**:
