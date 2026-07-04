@@ -1,6 +1,9 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import AppLayout from "@/components/app-layout";
 import EmployeeDashboardPage from "@/pages/employee/dashboard.page";
+import EmployeeProfilePage from "@/pages/employee/profile.page";
+import EmployeeLeavePage from "@/pages/employee/leave.page";
+import EmployeeAttendancePage from "@/pages/employee/attendance.page";
 import EmployeesPage from "@/pages/admin/employees.page";
 import AttendanceRecordsPage from "@/pages/admin/attendance.page";
 import LeaveApprovalsPage from "@/pages/admin/leave.page";
@@ -100,11 +103,11 @@ export const router = createBrowserRouter([
       },
       {
         path: "attendance",
-        element: <PlaceholderPage title="Attendance" />,
+        element: <EmployeeAttendancePage />,
       },
       {
         path: "leave",
-        element: <PlaceholderPage title="Leave Requests" />,
+        element: <EmployeeLeavePage />,
       },
       {
         path: "admin/payroll",
