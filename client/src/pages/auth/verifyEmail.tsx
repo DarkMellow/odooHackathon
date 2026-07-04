@@ -4,6 +4,9 @@ import { CheckCircle2, AlertCircle, Loader2, ArrowRight, ArrowLeft } from "lucid
 import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/stores/auth.store";
 
+// Module-level cache to prevent React StrictMode double-mounting from firing the single-use token verification twice.
+const verificationPromises = new Map<string, Promise<void>>();
+
 export function VerifyEmailPage() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token");
@@ -22,9 +25,12 @@ export function VerifyEmailPage() {
     const runVerification = async () => {
       setStatus("loading");
       try {
-        await verifyEmail(token);
+        const promise = verificationPromises.get(token) || verifyEmail(token);
+        verificationPromises.set(token, promise);
+        await promise;
         setStatus("success");
       } catch (err) {
+        verificationPromises.delete(token);
         setStatus("error");
       }
     };

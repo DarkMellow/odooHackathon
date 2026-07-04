@@ -43,12 +43,18 @@ This document serves as a straightforward manual testing guideline for checking 
 
 ## 2. Email Verification Flow
 
-### Test Case 2.1: Successful Verification
-- **Action**: Copy the token generated in the database `verification_tokens` table for the test user. Navigate directly to `http://localhost:5173/verify-email?token=<token>`.
+### Test Case 2.1: Resend API Verification Dispatch
+- **Action**:
+  - Fill out the Sign-Up form with valid details and submit.
+  - Check the backend server terminal console logs or the browser developer console for the mock verification link (if `RESEND_API_KEY` is not set).
+  - Alternatively, check the inbox of the registered email address if `RESEND_API_KEY` is configured in the backend `.env`.
+  - Navigate to the verification URL link.
 - **Expected Result**: 
-  - UI shows "Email Verified!" success card.
-  - Clicking "Proceed to Sign In" redirects user to `/signin`.
-  - Database updates the user record (`is_verified = true`) and removes the token record from `verification_tokens`.
+  - The backend server dispatches the verification email securely using the Resend API (via `RESEND_API_KEY` credentials).
+  - If no API key is present, the mock activation link is cleanly logged to both the server stdout terminal and the browser developer console.
+  - Upon navigating to the verification link, the UI displays the "Email Verified!" success card.
+  - Clicking "Proceed to Sign In" redirects the user to `/signin`.
+  - The database updates the user record (`isVerified = true`) and removes the token record from the database.
 
 ### Test Case 2.2: Invalid Token Handling
 - **Action**: Navigate to `http://localhost:5173/verify-email?token=invalid_dummy_token`.
@@ -84,6 +90,12 @@ This document serves as a straightforward manual testing guideline for checking 
   - Employees are redirected to `/dashboard`.
   - HR Admins are redirected to `/admin/employees`.
   - Cookies `accessToken` (15m expiry) and `refreshToken` (7d expiry) are successfully written to the browser as `httpOnly`, `Secure`, `SameSite=Strict`.
+
+### Test Case 3.4: Authenticated User Redirect (Access Control)
+- **Action**: Log in successfully. Attempt to navigate directly to `/signin`, `/signup`, or `/forgot-password` via the browser URL address bar.
+- **Expected Result**:
+  - The `GuestRoute` guard intercepts the navigation.
+  - The user is immediately redirected back to their active session view (Employees to `/dashboard`, HR Admins to `/admin/employees`), protecting auth states.
 
 ---
 

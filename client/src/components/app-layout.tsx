@@ -22,7 +22,6 @@ import {
   X,
   Sun,
   Moon,
-  Banknote,
 } from "lucide-react";
 import * as React from "react";
 
@@ -45,7 +44,7 @@ const adminNav = [
 // ─── Main layout ───────────────────────────────────────────────
 
 export function AppLayout() {
-  const { user, role, toggleRole } = useAuth();
+  const { user, role, toggleRole, logout } = useAuth();
   const { theme, setTheme } = useTheme();
   const location = useLocation();
   const navigate = useNavigate();
@@ -67,6 +66,15 @@ export function AppLayout() {
       navigate("/dashboard");
     }
   }, [role, toggleRole, navigate]);
+
+  const handleLogout = React.useCallback(async () => {
+    try {
+      await logout();
+      navigate("/signin");
+    } catch (err) {
+      console.error("Logout failed:", err);
+    }
+  }, [logout, navigate]);
 
   function isActive(to: string) {
     return location.pathname === to;
@@ -171,7 +179,7 @@ export function AppLayout() {
             </div>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon-sm" className="shrink-0">
+                <Button onClick={handleLogout} variant="ghost" size="icon-sm" className="shrink-0">
                   <LogOut className="size-4" />
                 </Button>
               </TooltipTrigger>
@@ -321,7 +329,7 @@ export function AppLayout() {
                     {role === "EMPLOYEE" ? "Employee" : "HR Admin"}
                   </p>
                 </div>
-                <Button variant="ghost" size="icon-sm">
+                <Button onClick={handleLogout} variant="ghost" size="icon-sm">
                   <LogOut className="size-4" />
                 </Button>
               </div>

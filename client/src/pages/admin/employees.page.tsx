@@ -17,12 +17,6 @@ import {
   MapPin,
   Briefcase,
 } from "lucide-react";
-import {
-  mockEmployees,
-} from "@/data/mock";
-import type {
-  MockEmployeeListItem,
-} from "@/data/mock";
 import { EnlargedProfileModal } from "@/components/dashboard/enlarged-profile-modal";
 
 const statusColors = {
@@ -30,6 +24,7 @@ const statusColors = {
   ABSENT: "bg-destructive/15 text-destructive border-0",
   HALF_DAY: "bg-warning/15 text-warning border-0",
   LEAVE: "bg-info/15 text-info border-0",
+  PENDING: "bg-muted text-muted-foreground border-0",
 } as const;
 
 const BANNER_COLORS = [
@@ -51,11 +46,11 @@ export function EmployeesPage() {
   const [isLoading, setIsLoading] = React.useState(true);
   const [searchQuery, setSearchQuery] = React.useState("");
   const [selectedDept, setSelectedDept] = React.useState("All");
-  const [employees, setEmployees] = React.useState<MockEmployeeListItem[]>([]);
+  const [employees, setEmployees] = React.useState<any[]>([]);
   
   // Modal State
-  const [selectedEmployee, setSelectedEmployee] = React.useState<MockEmployeeListItem | null>(null);
-  const [enlargedEmployee, setEnlargedEmployee] = React.useState<MockEmployeeListItem | null>(null);
+  const [selectedEmployee, setSelectedEmployee] = React.useState<any | null>(null);
+  const [enlargedEmployee, setEnlargedEmployee] = React.useState<any | null>(null);
   const [newEmployeeModalOpen, setNewEmployeeModalOpen] = React.useState(false);
 
   // New Employee Form State
@@ -65,38 +60,101 @@ export function EmployeesPage() {
   const [newEmpDesg, setNewEmpDesg] = React.useState("");
 
   React.useEffect(() => {
-    const timer = setTimeout(() => {
-      setEmployees(mockEmployees);
-      setIsLoading(false);
-    }, 500);
-    return () => clearTimeout(timer);
+    let active = true;
+    async function loadData() {
+      try {
+        const response = await fetch("/api/employee", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        });
+        const data = await response.json();
+        if (data.success && active) {
+          const mapped = data.employees.map((emp: any) => ({
+            id: emp.id,
+            employeeId: emp.employeeId,
+            fullName: emp.profile?.fullName || "Not Available",
+            department: emp.profile?.department || "Not Available",
+            designation: emp.profile?.designation || "Not Available",
+            attendanceStatus: emp.todayAttendance?.status || "ABSENT",
+            checkIn: emp.todayAttendance?.checkIn || null,
+            checkOut: emp.todayAttendance?.checkOut || null,
+            email: emp.email,
+            dob: emp.profile?.dob || null,
+            phone: emp.profile?.phone || null,
+            address: emp.profile?.address || null,
+            emergencyContact: emp.profile?.emergencyContact || null,
+            reportingManager: emp.profile?.reportingManager || null,
+            dateOfJoining: emp.profile?.dateOfJoining || null,
+          }));
+          setEmployees(mapped);
+        }
+      } catch (err) {
+        console.error("Failed to fetch employees", err);
+      } finally {
+        if (active) {
+          setIsLoading(false);
+        }
+      }
+    }
+    loadData();
+    return () => {
+      active = false;
+    };
   }, []);
 
   const departments = ["All", ...new Set(employees.map((e) => e.department))];
 
   // Actions
-  const handleCreateEmployee = (e: React.FormEvent) => {
+  const handleCreateEmployee = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newEmpName || !newEmpId || !newEmpDept || !newEmpDesg) return;
 
-    const newEmp: MockEmployeeListItem = {
-      id: Date.now(),
-      employeeId: newEmpId,
-      fullName: newEmpName,
-      department: newEmpDept,
-      designation: newEmpDesg,
-      attendanceStatus: "ABSENT",
-      checkIn: null,
-      checkOut: null,
-    };
+    try {
+      const response = await fetch("/api/employee/pre-register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          fullName: newEmpName,
+          employeeId: newEmpId,
+          department: newEmpDept,
+          designation: newEmpDesg,
+        }),
+      });
 
-    setEmployees((prev) => [newEmp, ...prev]);
-    setNewEmployeeModalOpen(false);
-    // Reset form
-    setNewEmpName("");
-    setNewEmpId("");
-    setNewEmpDept("");
-    setNewEmpDesg("");
+      const data = await response.json();
+      if (data.success) {
+        const newEmp = {
+          id: data.employee.id,
+          employeeId: data.employee.employeeId,
+          fullName: data.employee.fullName,
+          department: data.employee.department,
+          designation: data.employee.designation,
+          attendanceStatus: "PENDING",
+          checkIn: null,
+          checkOut: null,
+          email: "Pending Registration",
+          isRegistered: false,
+        };
+
+        setEmployees((prev) => [newEmp, ...prev]);
+        setNewEmployeeModalOpen(false);
+        // Reset form
+        setNewEmpName("");
+        setNewEmpId("");
+        setNewEmpDept("");
+        setNewEmpDesg("");
+      } else {
+        alert(data.message || "Failed to create employee");
+      }
+    } catch (err) {
+      console.error("Failed to create employee", err);
+      alert("Failed to create employee");
+    }
   };
 
   const filteredEmployees = employees.filter((emp) => {
@@ -223,7 +281,7 @@ export function EmployeesPage() {
 
               <div className="flex items-center justify-between text-xs border-t pt-3 border-border/40">
                 <span className="text-muted-foreground">{emp.department}</span>
-                <Badge className={statusColors[emp.attendanceStatus]}>
+                <Badge className={statusColors[emp.attendanceStatus as keyof typeof statusColors]}>
                   {emp.attendanceStatus}
                 </Badge>
               </div>
@@ -283,7 +341,7 @@ export function EmployeesPage() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <Badge className={cn(statusColors[selectedEmployee.attendanceStatus], "text-[10px] font-bold py-0.5")}>
+                  <Badge className={cn(statusColors[selectedEmployee.attendanceStatus as keyof typeof statusColors], "text-[10px] font-bold py-0.5")}>
                     {selectedEmployee.attendanceStatus}
                   </Badge>
                   <span className="text-xs text-muted-foreground">
@@ -305,7 +363,7 @@ export function EmployeesPage() {
                     </p>
                     <p className="flex items-center gap-2">
                       <Mail className="size-3.5 text-muted-foreground shrink-0" />
-                      <span>{selectedEmployee.fullName.toLowerCase().replace(" ", "")}@company.com</span>
+                      <span>{selectedEmployee.email}</span>
                     </p>
                     <p className="flex items-center gap-2">
                       <Phone className="size-3.5 text-muted-foreground shrink-0" />

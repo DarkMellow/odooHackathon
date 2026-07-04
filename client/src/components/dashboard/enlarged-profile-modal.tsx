@@ -3,12 +3,25 @@ import { cn } from "@/lib/utils";
 import { InitialsAvatar } from "@/components/ui/initials-avatar";
 import { Badge } from "@/components/ui/badge";
 import { X } from "lucide-react";
-import type { MockEmployeeListItem } from "@/data/mock";
-
 interface EnlargedProfileModalProps {
-  employee: MockEmployeeListItem;
+  employee: any;
   onClose: () => void;
 }
+
+const formatDate = (dateString?: string | null) => {
+  if (!dateString) return "Not Available";
+  try {
+    const d = new Date(dateString);
+    if (isNaN(d.getTime())) return "Not Available";
+    return d.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  } catch (e) {
+    return "Not Available";
+  }
+};
 
 export function EnlargedProfileModal({
   employee,
@@ -90,15 +103,15 @@ export function EnlargedProfileModal({
               </div>
               <div>
                 <span className="block font-semibold text-foreground/80">Location</span>
-                <span className="block mt-0.5">San Francisco, CA</span>
+                <span className="block mt-0.5">{employee.address || "Not Available"}</span>
               </div>
               <div>
                 <span className="block font-semibold text-foreground/80">Reporting Manager</span>
-                <span className="block mt-0.5">Alex Rivera</span>
+                <span className="block mt-0.5">{employee.reportingManager || "Not Available"}</span>
               </div>
               <div>
                 <span className="block font-semibold text-foreground/80">Joined Date</span>
-                <span className="block mt-0.5">Jan 15, 2026</span>
+                <span className="block mt-0.5">{formatDate(employee.dateOfJoining)}</span>
               </div>
             </div>
           </div>
@@ -157,7 +170,7 @@ export function EnlargedProfileModal({
                     About Employee
                   </h3>
                   <p className="text-xs text-muted-foreground leading-relaxed">
-                    Jane is a Senior Frontend Engineer with 5+ years of experience specializing in building premium user experiences, designs, and high-performance Web apps. She is dedicated, detail-oriented, and loves collaborating on design systems.
+                    {employee.designation ? `${employee.fullName} works as a ${employee.designation} in the ${employee.department || ""} department.` : "Not Available"}
                   </p>
                 </div>
 
@@ -166,7 +179,7 @@ export function EnlargedProfileModal({
                     What I love about my job
                   </h3>
                   <p className="text-xs text-muted-foreground leading-relaxed">
-                    I love bringing interactive user interfaces to life. Bridging the gap between design and engineering, crafting micro-animations, and building performant dashboard products that delight users every day.
+                    Not Available
                   </p>
                 </div>
 
@@ -175,7 +188,7 @@ export function EnlargedProfileModal({
                     My interests and hobbies
                   </h3>
                   <p className="text-xs text-muted-foreground leading-relaxed">
-                    Exploring coastal hiking trails, photographing architecture, playing acoustic guitar, experimenting with creative coding, and reading sci-fi novels.
+                    Not Available
                   </p>
                 </div>
               </div>
@@ -224,32 +237,32 @@ export function EnlargedProfileModal({
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-1">
                     <span className="block font-semibold text-muted-foreground">Date of Birth</span>
-                    <span className="block text-foreground font-medium text-sm">March 15, 1995</span>
+                    <span className="block text-foreground font-medium text-sm">{formatDate(employee.dob)}</span>
                   </div>
                   <div className="space-y-1">
                     <span className="block font-semibold text-muted-foreground">Nationality</span>
-                    <span className="block text-foreground font-medium text-sm">American</span>
+                    <span className="block text-foreground font-medium text-sm">Not Available</span>
                   </div>
                   <div className="space-y-1">
                     <span className="block font-semibold text-muted-foreground">Personal Email</span>
-                    <span className="block text-foreground font-medium text-sm">jane.doe@personal.com</span>
+                    <span className="block text-foreground font-medium text-sm">{employee.email || "Not Available"}</span>
                   </div>
                   <div className="space-y-1">
                     <span className="block font-semibold text-muted-foreground">Gender</span>
-                    <span className="block text-foreground font-medium text-sm">Female</span>
+                    <span className="block text-foreground font-medium text-sm">Not Available</span>
                   </div>
                   <div className="space-y-1">
                     <span className="block font-semibold text-muted-foreground">Marital Status</span>
-                    <span className="block text-foreground font-medium text-sm">Married</span>
+                    <span className="block text-foreground font-medium text-sm">Not Available</span>
                   </div>
                   <div className="space-y-1">
                     <span className="block font-semibold text-muted-foreground">Date of Joining</span>
-                    <span className="block text-foreground font-medium text-sm">Jan 15, 2026</span>
+                    <span className="block text-foreground font-medium text-sm">{formatDate(employee.dateOfJoining)}</span>
                   </div>
                   <div className="space-y-1 sm:col-span-2">
                     <span className="block font-semibold text-muted-foreground">Residing Address</span>
                     <span className="block text-foreground font-medium text-sm leading-relaxed">
-                      42 Elm Street, Apt 3B, San Francisco, CA 94102
+                      {employee.address || "Not Available"}
                     </span>
                   </div>
                 </div>
@@ -263,27 +276,27 @@ export function EnlargedProfileModal({
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-1">
                     <span className="block font-semibold text-muted-foreground">Account Number</span>
-                    <span className="block text-foreground font-medium text-sm">120987342012</span>
+                    <span className="block text-foreground font-medium text-sm">Not Available</span>
                   </div>
                   <div className="space-y-1">
                     <span className="block font-semibold text-muted-foreground">Bank Name</span>
-                    <span className="block text-foreground font-medium text-sm">Chase Bank</span>
+                    <span className="block text-foreground font-medium text-sm">Not Available</span>
                   </div>
                   <div className="space-y-1">
                     <span className="block font-semibold text-muted-foreground">IFSC Code</span>
-                    <span className="block text-foreground font-medium text-sm">CHAS0123456</span>
+                    <span className="block text-foreground font-medium text-sm">Not Available</span>
                   </div>
                   <div className="space-y-1">
                     <span className="block font-semibold text-muted-foreground">PAN No</span>
-                    <span className="block text-foreground font-medium text-sm">ABCDE1234F</span>
+                    <span className="block text-foreground font-medium text-sm">Not Available</span>
                   </div>
                   <div className="space-y-1">
                     <span className="block font-semibold text-muted-foreground">UAN NO</span>
-                    <span className="block text-foreground font-medium text-sm">100987654321</span>
+                    <span className="block text-foreground font-medium text-sm">Not Available</span>
                   </div>
                   <div className="space-y-1">
                     <span className="block font-semibold text-muted-foreground">Emp Code</span>
-                    <span className="block text-foreground font-medium text-sm">{employee.employeeId}</span>
+                    <span className="block text-foreground font-medium text-sm">{employee.employeeId || "Not Available"}</span>
                   </div>
                 </div>
               </div>

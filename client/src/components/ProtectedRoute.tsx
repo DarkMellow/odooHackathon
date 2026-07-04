@@ -9,11 +9,11 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
-  const { isAuthenticated, isLoading, user } = useAuthStore();
+  const { isAuthenticated, isInitialized, user } = useAuthStore();
   const location = useLocation();
 
   // Show a premium visual loading state while checking the user session from cookies
-  if (isLoading) {
+  if (!isInitialized) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
         <div className="relative flex items-center justify-center">

@@ -7,12 +7,12 @@ import EmployeeAttendancePage from "@/pages/employee/attendance.page";
 import EmployeesPage from "@/pages/admin/employees.page";
 import AttendanceRecordsPage from "@/pages/admin/attendance.page";
 import LeaveApprovalsPage from "@/pages/admin/leave.page";
-import SalaryManagementPage from "@/pages/admin/salary.page";
 import SignIn from "@/pages/auth/signIn";
 import Signup from "@/pages/auth/signup";
 import ForgotPassword from "@/pages/auth/forgotPassword";
 import HomePage from "@/pages/home.page";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import GuestRoute from "@/components/GuestRoute";
 import VerifyEmailPage from "@/pages/auth/verifyEmail";
 
 export const router = createBrowserRouter([
@@ -22,7 +22,11 @@ export const router = createBrowserRouter([
   },
   {
     path: "/signin",
-    element: <SignIn />,
+    element: (
+      <GuestRoute>
+        <SignIn />
+      </GuestRoute>
+    ),
   },
   {
     path: "/login",
@@ -30,7 +34,11 @@ export const router = createBrowserRouter([
   },
   {
     path: "/signup",
-    element: <Signup />,
+    element: (
+      <GuestRoute>
+        <Signup />
+      </GuestRoute>
+    ),
   },
   {
     path: "/verify-email",
@@ -38,7 +46,11 @@ export const router = createBrowserRouter([
   },
   {
     path: "/forgot-password",
-    element: <ForgotPassword />,
+    element: (
+      <GuestRoute>
+        <ForgotPassword />
+      </GuestRoute>
+    ),
   },
   {
     element: (
@@ -98,12 +110,20 @@ export const router = createBrowserRouter([
       },
       {
         path: "admin/payroll",
-        element: (
-          <ProtectedRoute allowedRoles={["HR"]}>
-            <SalaryManagementPage />
-          </ProtectedRoute>
-        ),
+        element: <PlaceholderPage title="Payroll" />,
       },
+      {
+        path: "signin",
+        element: <SignIn />
+      },
+      {
+        path: "signup",
+        element: <Signup />
+      },
+      {
+        path: "forgot-password",
+        element: <ForgotPassword />
+      }
     ],
   },
 ]);

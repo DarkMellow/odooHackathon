@@ -11,6 +11,7 @@ import {
 } from '../utils/jwt';
 import { signupSchema, loginSchema } from '../validators/auth.validator';
 import { ZodError } from 'zod';
+import { Resend } from 'resend';
 
 const router = Router();
 
@@ -63,6 +64,33 @@ router.post(
       });
     }
 
+    // Validate against PreRegisteredEmployee
+    const preRegistered = await prisma.preRegisteredEmployee.findUnique({
+      where: { employeeId },
+    });
+
+    if (!preRegistered) {
+      return res.status(400).json({
+        success: false,
+        message: 'Employee ID is not pre-registered. Please contact HR.',
+      });
+    }
+
+    // Check if name matches (case-insensitive and trimmed)
+    if (preRegistered.fullName.trim().toLowerCase() !== fullName.trim().toLowerCase()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Employee ID and Full Name do not match our HR records.',
+      });
+    }
+
+    if (preRegistered.isRegistered) {
+      return res.status(409).json({
+        success: false,
+        message: 'This employee ID is already registered.',
+      });
+    }
+
     // Hash the password
     const passwordHash = await hashPassword(password);
 
@@ -78,7 +106,7 @@ router.post(
           employeeId,
           email,
           passwordHash,
-          role,
+          role: preRegistered.role, // Enforce the role HR assigned
           isVerified: false,
         },
       });
@@ -86,7 +114,9 @@ router.post(
       await tx.profile.create({
         data: {
           userId: user.id,
-          fullName,
+          fullName: preRegistered.fullName, // Enforce pre-registered name
+          department: preRegistered.department,
+          designation: preRegistered.designation,
         },
       });
 
@@ -98,15 +128,58 @@ router.post(
         },
       });
 
+      await tx.preRegisteredEmployee.update({
+        where: { employeeId },
+        data: { isRegistered: true },
+      });
+
       return user;
     });
 
-    // Note: Verification email sending logic will be integrated in Phase 6.
-    // For now, verification token is created in the DB and returned for testing if needed.
+    // Dispatch verification email via Resend if API Key is configured
+    const apiKey = process.env.RESEND_API_KEY;
+    const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+    const verificationLink = `${clientUrl}/verify-email?token=${encodeURIComponent(verificationToken)}`;
+
+    if (apiKey) {
+      try {
+        const resend = new Resend(apiKey);
+        await resend.emails.send({
+          from: 'EasyHR <onboarding@resend.dev>',
+          to: [email],
+          subject: 'EasyHR: Verify Your Email Address',
+          html: `
+            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
+              <h2 style="color: #3b82f6; margin-top: 0;">Welcome to EasyHR!</h2>
+              <p>Hello <strong>${fullName}</strong>,</p>
+              <p>Thank you for registering. Please verify your email address to activate your account and access your dashboard.</p>
+              <div style="margin: 24px 0;">
+                <a href="${verificationLink}" style="background-color: #3b82f6; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Verify Email Address</a>
+              </div>
+              <p style="font-size: 11px; color: #64748b; margin-bottom: 4px;">If the button above does not work, copy and paste this URL into your browser:</p>
+              <p style="font-size: 11px; color: #3b82f6; word-break: break-all; margin-top: 0;">${verificationLink}</p>
+              <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 20px 0;" />
+              <p style="font-size: 11px; color: #94a3b8;">If you did not request this account, you can safely ignore this email.</p>
+            </div>
+          `,
+        });
+        console.log(`[Resend] Verification email dispatched successfully to ${email}`);
+      } catch (mailErr) {
+        console.error('[Resend] Failed to send verification email:', mailErr);
+      }
+    } else {
+      console.warn(
+        `[Resend] RESEND_API_KEY is not defined in backend .env. ` +
+        `Verification email skipped. Mock verification URL:\n${verificationLink}`
+      );
+    }
+
+    // Return response with verificationToken so frontend can also see it in the dev console
     return res.status(201).json({
       success: true,
       message: 'Account created. Please check email for verification link.',
       userId: newUser.id,
+      verificationToken,
     });
   })
 );

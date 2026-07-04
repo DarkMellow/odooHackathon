@@ -9,7 +9,7 @@ interface AuthState {
   error: string | null;
   login: (email: string, password: string) => Promise<AuthUser>;
   logout: () => Promise<void>;
-  signup: (payload: any) => Promise<void>;
+  signup: (payload: any) => Promise<any>;
   verifyEmail: (token: string) => Promise<void>;
   checkAuth: () => Promise<AuthUser | null>;
   setError: (error: string | null) => void;
@@ -18,6 +18,7 @@ interface AuthState {
   realUser: AuthUser | null;
   realIsAuthenticated: boolean;
   toggleBypass: () => void;
+  isInitialized: boolean;
 }
 
 // Helper to handle API responses and throw detailed errors
@@ -87,6 +88,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   bypassActive: false,
   realUser: null,
   realIsAuthenticated: false,
+  isInitialized: false,
 
   setError: (error) => set({ error }),
 
@@ -159,6 +161,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         role: user.role,
         isAuthenticated: true,
         isLoading: false,
+        isInitialized: true,
         error: null,
       });
 
@@ -184,6 +187,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         role: null,
         isAuthenticated: false,
         isLoading: false,
+        isInitialized: true,
         error: null,
       });
     }
@@ -192,11 +196,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   signup: async (payload) => {
     set({ isLoading: true, error: null });
     try {
-      await fetchAPI("/api/auth/signup", {
+      const response = await fetchAPI("/api/auth/signup", {
         method: "POST",
         body: JSON.stringify(payload),
       });
       set({ isLoading: false, error: null });
+      return response;
     } catch (err: any) {
       set({ error: err.message, isLoading: false });
       throw err;
@@ -236,6 +241,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         role: user.role,
         isAuthenticated: true,
         isLoading: false,
+        isInitialized: true,
         error: null,
       });
 
@@ -247,6 +253,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         role: null,
         isAuthenticated: false,
         isLoading: false,
+        isInitialized: true,
       });
       return null;
     }

@@ -8,10 +8,8 @@ import { StatCard } from "@/components/dashboard/stat-card";
 import { QuickActionCard } from "@/components/dashboard/quick-action-card";
 import { ActivityTimeline } from "@/components/dashboard/activity-timeline";
 import {
-  mockTodayAttendance,
   mockLeaveRequests,
   mockSalary,
-  mockActivities,
 } from "@/data/mock";
 import {
   User,
@@ -58,21 +56,62 @@ export function EmployeeDashboardPage() {
   const firstName = user.profile.fullName.split(" ")[0];
   const [isLoading, setIsLoading] = React.useState(true);
 
-  // Simulate initial data load
-  React.useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 600);
-    return () => clearTimeout(timer);
+  // Real attendance state
+  const [attendanceLogs, setAttendanceLogs] = React.useState<any[]>([]);
+  const [localCheckIn, setLocalCheckIn] = React.useState<string | null>(null);
+  const [localCheckOut, setLocalCheckOut] = React.useState<string | null>(null);
+  const [isSubmittingCheck, setIsSubmittingCheck] = React.useState(false);
+  const [attendanceError, setAttendanceError] = React.useState<string | null>(null);
+
+  // Fetch function
+  const fetchAttendanceData = React.useCallback(async () => {
+    try {
+      const response = await fetch("/api/employee/attendance/history", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
+      const data = await response.json();
+      if (data.success) {
+        setAttendanceLogs(data.logs || []);
+        
+        // Find today's log (UTC-based logic matching backend)
+        const todayStr = new Date().toISOString().slice(0, 10);
+        const todayLog = (data.logs || []).find((log: any) =>
+          new Date(log.date).toISOString().slice(0, 10) === todayStr
+        );
+        
+        if (todayLog) {
+          setLocalCheckIn(todayLog.checkIn || null);
+          setLocalCheckOut(todayLog.checkOut || null);
+        } else {
+          setLocalCheckIn(null);
+          setLocalCheckOut(null);
+        }
+      } else {
+        setAttendanceError(data.message || "Failed to load attendance logs");
+      }
+    } catch (err: any) {
+      setAttendanceError(err.message || "An error occurred fetching attendance");
+    }
   }, []);
 
-  // Attendance state
-  const todayAttendance = mockTodayAttendance;
-  const isCheckedIn = !!todayAttendance.checkIn;
-  const [localCheckIn, setLocalCheckIn] = React.useState(
-    todayAttendance.checkIn,
-  );
-  const [localCheckOut, setLocalCheckOut] = React.useState(
-    todayAttendance.checkOut,
-  );
+  // Initial data load
+  React.useEffect(() => {
+    let active = true;
+    async function loadData() {
+      await fetchAttendanceData();
+      if (active) {
+        setIsLoading(false);
+      }
+    }
+    loadData();
+    return () => {
+      active = false;
+    };
+  }, [fetchAttendanceData]);
 
   // Leave stats
   const pendingLeaves = mockLeaveRequests.filter(
@@ -82,17 +121,134 @@ export function EmployeeDashboardPage() {
   // Salary
   const salary = mockSalary;
 
-  // Handle check-in / check-out (optimistic UI)
-  function handleCheckIn() {
-    setLocalCheckIn(new Date().toISOString());
+  // Handle check-in / check-out
+  async function handleCheckIn() {
+    setIsSubmittingCheck(true);
+    setAttendanceError(null);
+    try {
+      const response = await fetch("/api/employee/attendance/check-in", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
+      const data = await response.json();
+      if (data.success) {
+        await fetchAttendanceData();
+      } else {
+        setAttendanceError(data.message || "Check-in failed");
+      }
+    } catch (err: any) {
+      setAttendanceError(err.message || "An error occurred during check-in");
+    } finally {
+      setIsSubmittingCheck(false);
+    }
   }
 
-  function handleCheckOut() {
-    setLocalCheckOut(new Date().toISOString());
+  async function handleCheckOut() {
+    setIsSubmittingCheck(true);
+    setAttendanceError(null);
+    try {
+      const response = await fetch("/api/employee/attendance/check-out", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
+      const data = await response.json();
+      if (data.success) {
+        await fetchAttendanceData();
+      } else {
+        setAttendanceError(data.message || "Check-out failed");
+      }
+    } catch (err: any) {
+      setAttendanceError(err.message || "An error occurred during check-out");
+    } finally {
+      setIsSubmittingCheck(false);
+    }
   }
 
   const effectiveCheckedIn = !!localCheckIn;
   const effectiveCheckedOut = !!localCheckOut;
+
+  // Dynamic Recent Activity Timeline
+  const recentActivities = React.useMemo(() => {
+    const list: any[] = [];
+    
+    // Process real attendance logs
+    attendanceLogs.forEach((log) => {
+      const logDate = new Date(log.date);
+      const dateLabel = logDate.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+      
+      if (log.checkIn) {
+        list.push({
+          id: `checkin-${log.id}`,
+          type: "attendance",
+          message: `You checked in on ${dateLabel} at ${formatTime(log.checkIn)}`,
+          timestamp: log.checkIn,
+          status: "success",
+        });
+      }
+      if (log.checkOut) {
+        list.push({
+          id: `checkout-${log.id}`,
+          type: "attendance",
+          message: `You checked out on ${dateLabel} at ${formatTime(log.checkOut)}`,
+          timestamp: log.checkOut,
+          status: "success",
+        });
+      }
+      if (log.status === "LEAVE") {
+        list.push({
+          id: `leave-${log.id}`,
+          type: "attendance",
+          message: `You were on leave on ${dateLabel}`,
+          timestamp: log.date,
+          status: "info",
+        });
+      }
+      if (log.status === "ABSENT" && !log.checkIn) {
+        const todayStr = new Date().toISOString().slice(0, 10);
+        const logStr = new Date(log.date).toISOString().slice(0, 10);
+        if (logStr !== todayStr) {
+          list.push({
+            id: `absent-${log.id}`,
+            type: "attendance",
+            message: `You were absent on ${dateLabel}`,
+            timestamp: log.date,
+            status: "warning",
+          });
+        }
+      }
+    });
+
+    // Merge in mock leave request activities for visual completeness
+    mockLeaveRequests.forEach((leave) => {
+      if (leave.status === "APPROVED") {
+        list.push({
+          id: `leave-approved-${leave.id}`,
+          type: "leave",
+          message: `Your Sick Leave for Jul 10 was approved`,
+          timestamp: leave.decisionDate || leave.createdAt,
+          status: "success",
+        });
+      } else if (leave.status === "PENDING") {
+        list.push({
+          id: `leave-pending-${leave.id}`,
+          type: "leave",
+          message: `You applied for Paid Leave (Jul 20 – Jul 22)`,
+          timestamp: leave.createdAt,
+          status: "info",
+        });
+      }
+    });
+
+    // Sort by timestamp descending
+    const sorted = list.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    return sorted.slice(0, 5);
+  }, [attendanceLogs]);
 
   // ─── Loading skeleton ──────────────────────────────────────
 
@@ -140,6 +296,21 @@ export function EmployeeDashboardPage() {
         </p>
       </div>
 
+      {/* ─── Attendance Error Alert ────────────────────────── */}
+      {attendanceError && (
+        <div className="bg-destructive/15 border border-destructive/25 rounded-xl p-4 text-sm text-destructive flex items-center justify-between">
+          <span>{attendanceError}</span>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setAttendanceError(null)}
+            className="text-destructive hover:bg-destructive/10 h-7 px-2"
+          >
+            Dismiss
+          </Button>
+        </div>
+      )}
+
       {/* ─── Check-In / Check-Out Banner ──────────────────── */}
       <div className="relative overflow-hidden rounded-xl border border-border bg-card p-5">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -182,13 +353,14 @@ export function EmployeeDashboardPage() {
 
           <div>
             {!effectiveCheckedIn ? (
-              <Button onClick={handleCheckIn} className="gap-2 w-full sm:w-auto">
+              <Button onClick={handleCheckIn} disabled={isSubmittingCheck} className="gap-2 w-full sm:w-auto">
                 <LogIn className="size-4" />
                 Check In
               </Button>
             ) : !effectiveCheckedOut ? (
               <Button
                 onClick={handleCheckOut}
+                disabled={isSubmittingCheck}
                 variant="outline"
                 className="gap-2 w-full sm:w-auto"
               >
@@ -240,10 +412,21 @@ export function EmployeeDashboardPage() {
         />
         <StatCard
           label="This Week"
-          value="4/5"
+          value={(() => {
+            const presentDays = attendanceLogs.filter(
+              (log) => log.status === "PRESENT" || log.status === "HALF_DAY"
+            ).length;
+            return `${presentDays}/5`;
+          })()}
           description="Days present"
           icon={TrendingUp}
-          trend={{ value: "80% attendance", positive: true }}
+          trend={(() => {
+            const presentDays = attendanceLogs.filter(
+              (log) => log.status === "PRESENT" || log.status === "HALF_DAY"
+            ).length;
+            const rate = Math.round((presentDays / 5) * 100);
+            return { value: `${rate}% attendance`, positive: rate >= 80 };
+          })()}
         />
       </div>
 
@@ -262,8 +445,8 @@ export function EmployeeDashboardPage() {
           <QuickActionCard
             title="Attendance History"
             statusLine={
-              isCheckedIn
-                ? `Checked in at ${formatTime(todayAttendance.checkIn)}`
+              effectiveCheckedIn
+                ? `Checked in at ${formatTime(localCheckIn)}`
                 : "View your records"
             }
             icon={Clock}
@@ -299,7 +482,7 @@ export function EmployeeDashboardPage() {
           Recent Activity
         </h2>
         <div className="rounded-xl border border-border bg-card p-5">
-          <ActivityTimeline items={mockActivities} />
+          <ActivityTimeline items={recentActivities} />
         </div>
       </div>
     </div>

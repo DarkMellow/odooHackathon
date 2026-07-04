@@ -123,13 +123,21 @@ function SignupForm() {
 
     try {
       const roleMapped = formData.role === "HR" ? "HR" : "EMPLOYEE";
-      await signup({
+      const signupRes = await signup({
         fullName: formData.fullName,
         employeeId: formData.employeeId,
         email: formData.email,
         password: formData.password,
         role: roleMapped,
       });
+
+      // Log verification URL in developer console for convenient sandbox testing
+      const token = signupRes?.verificationToken;
+      if (token) {
+        const verificationLink = `${window.location.origin}/verify-email?token=${encodeURIComponent(token)}`;
+        console.log("Mock verification link (printed for sandbox testing convenience):\n", verificationLink);
+      }
+
       setIsSuccess(true);
     } catch (err: any) {
       if (err.details) {

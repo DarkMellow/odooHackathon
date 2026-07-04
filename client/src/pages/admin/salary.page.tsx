@@ -15,12 +15,6 @@ import {
   MapPin,
   TrendingUp,
 } from "lucide-react";
-import {
-  mockEmployees,
-} from "@/data/mock";
-import type {
-  MockEmployeeListItem,
-} from "@/data/mock";
 import { EnlargedProfileModal } from "@/components/dashboard/enlarged-profile-modal";
 
 // Mock Salaries Map
@@ -57,24 +51,67 @@ function getBannerColorFromName(name: string) {
 export function SalaryManagementPage() {
   const [isLoading, setIsLoading] = React.useState(true);
   const [searchQuery, setSearchQuery] = React.useState("");
-  const [selectedEmployee, setSelectedEmployee] = React.useState<MockEmployeeListItem | null>(null);
-  const [enlargedEmployee, setEnlargedEmployee] = React.useState<MockEmployeeListItem | null>(null);
+  const [employees, setEmployees] = React.useState<any[]>([]);
+  const [selectedEmployee, setSelectedEmployee] = React.useState<any | null>(null);
+  const [enlargedEmployee, setEnlargedEmployee] = React.useState<any | null>(null);
 
   React.useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 500);
-    return () => clearTimeout(timer);
+    let active = true;
+    async function loadData() {
+      try {
+        const response = await fetch("/api/employee", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        });
+        const data = await response.json();
+        if (data.success && active) {
+          const mapped = data.employees.map((emp: any) => ({
+            id: emp.id,
+            employeeId: emp.employeeId,
+            fullName: emp.profile?.fullName || "Not Available",
+            department: emp.profile?.department || "Not Available",
+            designation: emp.profile?.designation || "Not Available",
+            attendanceStatus: emp.todayAttendance?.status || "ABSENT",
+            checkIn: emp.todayAttendance?.checkIn || null,
+            checkOut: emp.todayAttendance?.checkOut || null,
+            email: emp.email,
+            dob: emp.profile?.dob || null,
+            phone: emp.profile?.phone || null,
+            address: emp.profile?.address || null,
+            emergencyContact: emp.profile?.emergencyContact || null,
+            reportingManager: emp.profile?.reportingManager || null,
+            dateOfJoining: emp.profile?.dateOfJoining || null,
+            netPay: emp.salaryStructures?.[0]?.netPay || null,
+          }));
+          setEmployees(mapped);
+        }
+      } catch (err) {
+        console.error("Failed to fetch employees", err);
+      } finally {
+        if (active) {
+          setIsLoading(false);
+        }
+      }
+    }
+    loadData();
+    return () => {
+      active = false;
+    };
   }, []);
 
   // Filtered employees list
-  const filteredEmployees = mockEmployees.filter((emp) =>
+  const filteredEmployees = employees.filter((emp) =>
     emp.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
     emp.employeeId.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   // Math Calculations
-  const salaryValues = Object.values(employeeSalaries);
+  const salaryValues = employees.map(emp => emp.netPay || employeeSalaries[emp.id] || 4000);
   const totalSalary = salaryValues.reduce((sum, val) => sum + val, 0);
-  const averageSalary = Math.round(totalSalary / salaryValues.length);
+  const averageSalary = salaryValues.length > 0 ? Math.round(totalSalary / salaryValues.length) : 0;
 
   if (isLoading) {
     return (
@@ -232,7 +269,7 @@ export function SalaryManagementPage() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <Badge className={cn(statusColors[selectedEmployee.attendanceStatus], "text-[10px] font-bold py-0.5")}>
+                  <Badge className={cn(statusColors[selectedEmployee.attendanceStatus as keyof typeof statusColors], "text-[10px] font-bold py-0.5")}>
                     {selectedEmployee.attendanceStatus}
                   </Badge>
                   <span className="text-xs text-muted-foreground">

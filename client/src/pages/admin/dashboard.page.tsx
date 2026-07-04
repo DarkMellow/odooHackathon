@@ -17,12 +17,10 @@ import {
   AlertCircle,
 } from "lucide-react";
 import {
-  mockEmployees,
   mockPendingLeaveRequests,
 } from "@/data/mock";
 import type {
   MockPendingLeaveRequest,
-  MockEmployeeListItem,
 } from "@/data/mock";
 
 // ─── Status Badge Colors ────────────────────────────────────────
@@ -45,22 +43,60 @@ export function AdminDashboardPage() {
 
   // Dynamic Data Lists
   const [leaveRequests, setLeaveRequests] = React.useState<MockPendingLeaveRequest[]>([]);
-  const [employees, setEmployees] = React.useState<MockEmployeeListItem[]>([]);
+  const [employees, setEmployees] = React.useState<any[]>([]);
   const [rejectionComments, setRejectionComments] = React.useState<Record<number, string>>({});
   const [commentErrors, setCommentErrors] = React.useState<Record<number, string>>({});
 
-  // Simulate loading state
+  // Fetch employees and simulate leave requests loading
   React.useEffect(() => {
-    const timer = setTimeout(() => {
-      setLeaveRequests(mockPendingLeaveRequests);
-      setEmployees(mockEmployees);
-      setIsLoading(false);
-    }, 600);
-    return () => clearTimeout(timer);
+    let active = true;
+    async function loadData() {
+      try {
+        const response = await fetch("/api/employee", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        });
+        const data = await response.json();
+        if (data.success && active) {
+          const mapped = data.employees.map((emp: any) => ({
+            id: emp.id,
+            employeeId: emp.employeeId,
+            fullName: emp.profile?.fullName || "Not Available",
+            department: emp.profile?.department || "Not Available",
+            designation: emp.profile?.designation || "Not Available",
+            attendanceStatus: emp.todayAttendance?.status || "ABSENT",
+            checkIn: emp.todayAttendance?.checkIn || null,
+            checkOut: emp.todayAttendance?.checkOut || null,
+            email: emp.email,
+            dob: emp.profile?.dob || null,
+            phone: emp.profile?.phone || null,
+            address: emp.profile?.address || null,
+            emergencyContact: emp.profile?.emergencyContact || null,
+            reportingManager: emp.profile?.reportingManager || null,
+            dateOfJoining: emp.profile?.dateOfJoining || null,
+          }));
+          setEmployees(mapped);
+        }
+      } catch (err) {
+        console.error("Failed to fetch employees", err);
+      } finally {
+        if (active) {
+          setLeaveRequests(mockPendingLeaveRequests);
+          setIsLoading(false);
+        }
+      }
+    }
+    loadData();
+    return () => {
+      active = false;
+    };
   }, []);
 
   // Department list extract
-  const departments = ["All", ...new Set(mockEmployees.map((e) => e.department))];
+  const departments = ["All", ...new Set(employees.map((e) => e.department))];
 
   // Leave Actions
   const handleApproveLeave = (id: number) => {
@@ -358,7 +394,7 @@ export function AdminDashboardPage() {
                       <td className="px-5 py-4">
                         <Badge
                           variant="secondary"
-                          className={statusColors[emp.attendanceStatus]}
+                          className={statusColors[emp.attendanceStatus as keyof typeof statusColors]}
                         >
                           {emp.attendanceStatus.replace("_", " ")}
                         </Badge>
