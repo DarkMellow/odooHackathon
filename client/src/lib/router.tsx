@@ -7,8 +7,13 @@ import LeaveApprovalsPage from "@/pages/admin/leave.page";
 import SignIn from "@/pages/auth/signIn";
 import Signup from "@/pages/auth/signup";
 import ForgotPassword from "@/pages/auth/forgotPassword";
+import HomePage from "@/pages/home.page";
 
 export const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <HomePage />,
+  },
   {
     path: "/signin",
     element: <SignIn />,
@@ -22,13 +27,8 @@ export const router = createBrowserRouter([
     element: <ForgotPassword />,
   },
   {
-    path: "/",
     element: <AppLayout />,
     children: [
-      {
-        index: true,
-        element: <Navigate to="/dashboard" replace />,
-      },
       {
         path: "dashboard",
         element: <EmployeeDashboardPage />,
