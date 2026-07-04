@@ -1,0 +1,151 @@
+datasource db {
+  provider = "mysql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  EMPLOYEE
+  HR
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  HALF_DAY
+  LEAVE
+}
+
+enum LeaveType {
+  PAID
+  SICK
+  UNPAID
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  WITHDRAWN
+}
+
+model User {
+  id                 Int                  @id @default(autoincrement()) @db.UnsignedInt
+  employeeId         String               @unique @map("employee_id") @db.VarChar(50)
+  email              String               @unique @db.VarChar(255)
+  passwordHash       String               @map("password_hash") @db.VarChar(255)
+  role               Role                 @default(EMPLOYEE)
+  isVerified         Boolean              @default(false) @map("is_verified")
+  createdAt          DateTime             @default(now()) @map("created_at") @db.Timestamp
+  updatedAt          DateTime             @updatedAt @map("updated_at") @db.Timestamp
+  
+  profile            Profile?
+  attendances        Attendance[]
+  leaveRequests      LeaveRequest[]       @relation("EmployeeLeaves")
+  reviewedLeaves     LeaveRequest[]       @relation("AdminReviews")
+  salaryStructures   SalaryStructure[]
+  verificationTokens VerificationToken[]
+  refreshTokens      RefreshToken[]
+
+  @@map("users")
+}
+
+model Profile {
+  id                Int      @id @default(autoincrement()) @db.UnsignedInt
+  userId            Int      @unique @map("user_id") @db.UnsignedInt
+  fullName          String   @map("full_name") @db.VarChar(255)
+  dob               DateTime? @db.Date
+  phone             String?  @db.VarChar(20)
+  address           String?  @db.Text
+  emergencyContact  String?  @map("emergency_contact") @db.VarChar(255)
+  profilePictureUrl String?  @map("profile_picture_url") @db.VarChar(512)
+  department        String?  @db.VarChar(100)
+  designation       String?  @db.VarChar(100)
+  dateOfJoining     DateTime? @map("date_of_joining") @db.Date
+  reportingManager  String?  @map("reporting_manager") @db.VarChar(100)
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamp
+  updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamp
+
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("profiles")
+}
+
+model Attendance {
+  id        Int              @id @default(autoincrement()) @db.UnsignedInt
+  userId    Int              @map("user_id") @db.UnsignedInt
+  date      DateTime         @db.Date
+  checkIn   DateTime?        @map("check_in") @db.Timestamp
+  checkOut  DateTime?        @map("check_out") @db.Timestamp
+  status    AttendanceStatus @default(ABSENT)
+  createdAt DateTime         @default(now()) @map("created_at") @db.Timestamp
+  updatedAt DateTime         @updatedAt @map("updated_at") @db.Timestamp
+
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date], name: "userId_date_unique")
+  @@map("attendance")
+}
+
+model LeaveRequest {
+  id              Int         @id @default(autoincrement()) @db.UnsignedInt
+  userId          Int         @map("user_id") @db.UnsignedInt
+  leaveType       LeaveType   @map("leave_type")
+  startDate       DateTime    @map("start_date") @db.Date
+  endDate         DateTime    @map("end_date") @db.Date
+  totalDays       Int         @map("total_days") @db.UnsignedInt
+  status          LeaveStatus @default(PENDING)
+  employeeRemarks String?     @map("employee_remarks") @db.Text
+  reviewedBy      Int?        @map("reviewed_by") @db.UnsignedInt
+  hrComments      String?     @map("hr_comments") @db.Text
+  decisionDate    DateTime?   @map("decision_date") @db.Timestamp
+  createdAt       DateTime    @default(now()) @map("created_at") @db.Timestamp
+  updatedAt       DateTime    @updatedAt @map("updated_at") @db.Timestamp
+
+  user            User        @relation("EmployeeLeaves", fields: [userId], references: [id], onDelete: Cascade)
+  reviewer        User?       @relation("AdminReviews", fields: [reviewedBy], references: [id], onDelete: SetNull)
+
+  @@map("leave_requests")
+}
+
+model SalaryStructure {
+  id            Int      @id @default(autoincrement()) @db.UnsignedInt
+  userId        Int      @map("user_id") @db.UnsignedInt
+  baseSalary    Decimal  @default(0.00) @map("base_salary") @db.Decimal(12, 2)
+  allowances    Json?    // Array of {"label": string, "amount": number}
+  deductions    Json?    // Array of {"label": string, "amount": number}
+  netPay        Decimal  @default(0.00) @map("net_pay") @db.Decimal(12, 2)
+  effectiveDate DateTime @map("effective_date") @db.Date
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamp
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamp
+
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("salary_structures")
+}
+
+model VerificationToken {
+  id        Int      @id @default(autoincrement()) @db.UnsignedInt
+  userId    Int      @map("user_id") @db.UnsignedInt
+  token     String   @unique @db.VarChar(255)
+  expiresAt DateTime @map("expires_at") @db.Timestamp
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("verification_tokens")
+}
+
+model RefreshToken {
+  id        Int      @id @default(autoincrement()) @db.UnsignedInt
+  userId    Int      @map("user_id") @db.UnsignedInt
+  token     String   @unique @db.VarChar(500)
+  expiresAt DateTime @map("expires_at") @db.Timestamp
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+}

@@ -4,7 +4,7 @@
 **Document Owner:** Senior Backend Engineer  
 **Status:** Approved  
 **Last Updated:** July 4, 2026  
-**Reference Docs:** [PRD (PRD.md)](file:///home/aditya/Documents/Projects/odooHackathon/docs/PRD.md) | [TRD (TRD.md)](file:///home/aditya/Documents/Projects/odooHackathon/docs/TRD.md) | [App Flow (FLOW.md)](file:///home/aditya/Documents/Projects/odooHackathon/docs/FLOW.md)
+**Reference Docs:** [PRD (PRD.md)](./PRD.md) | [TRD (TRD.md)](./TRD.md) | [App Flow (FLOW.md)](./FLOW.md)
 
 ---
 
