@@ -4,40 +4,96 @@ import EmployeeDashboardPage from "@/pages/employee/dashboard.page";
 import EmployeesPage from "@/pages/admin/employees.page";
 import AttendanceRecordsPage from "@/pages/admin/attendance.page";
 import LeaveApprovalsPage from "@/pages/admin/leave.page";
+import SalaryManagementPage from "@/pages/admin/salary.page";
 import SignIn from "@/pages/auth/signIn";
 import Signup from "@/pages/auth/signup";
 import ForgotPassword from "@/pages/auth/forgotPassword";
 import Logout from "@/pages/auth/logout";
 import NotFound from "@/pages/error/NotFound";
+import HomePage from "@/pages/home.page";
+import ProtectedRoute from "@/components/ProtectedRoute";
+import GuestRoute from "@/components/GuestRoute";
+import VerifyEmailPage from "@/pages/auth/verifyEmail";
 
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: <AppLayout />,
+    element: <HomePage />,
+  },
+  {
+    path: "/signin",
+    element: (
+      <GuestRoute>
+        <SignIn />
+      </GuestRoute>
+    ),
+  },
+  {
+    path: "/login",
+    element: <Navigate to="/signin" replace />,
+  },
+  {
+    path: "/signup",
+    element: (
+      <GuestRoute>
+        <Signup />
+      </GuestRoute>
+    ),
+  },
+  {
+    path: "/verify-email",
+    element: <VerifyEmailPage />,
+  },
+  {
+    path: "/forgot-password",
+    element: (
+      <GuestRoute>
+        <ForgotPassword />
+      </GuestRoute>
+    ),
+  },
+  {
+    element: (
+      <ProtectedRoute>
+        <AppLayout />
+      </ProtectedRoute>
+    ),
     children: [
-      {
-        index: true,
-        element: <Navigate to="/dashboard" replace />,
-      },
       {
         path: "dashboard",
         element: <EmployeeDashboardPage />,
       },
       {
         path: "admin/dashboard",
-        element: <Navigate to="/admin/employees" replace />,
+        element: (
+          <ProtectedRoute allowedRoles={["HR"]}>
+            <Navigate to="/admin/employees" replace />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "admin/employees",
-        element: <EmployeesPage />,
+        element: (
+          <ProtectedRoute allowedRoles={["HR"]}>
+            <EmployeesPage />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "admin/attendance",
-        element: <AttendanceRecordsPage />,
+        element: (
+          <ProtectedRoute allowedRoles={["HR"]}>
+            <AttendanceRecordsPage />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "admin/leave",
-        element: <LeaveApprovalsPage />,
+        element: (
+          <ProtectedRoute allowedRoles={["HR"]}>
+            <LeaveApprovalsPage />
+          </ProtectedRoute>
+        ),
       },
       // Placeholder routes — pages to be built in upcoming phases
       {
@@ -67,14 +123,6 @@ export const router = createBrowserRouter([
       {
         path: "forgot-password",
         element: <ForgotPassword />
-      },
-      {
-        path: "logout",
-        element: <Logout />
-      },
-      {
-        path: "*",
-        element: <NotFound />
       }
     ],
   },

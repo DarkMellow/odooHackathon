@@ -67,7 +67,6 @@ export function EmployeeDashboardPage() {
   // Attendance state
   const todayAttendance = mockTodayAttendance;
   const isCheckedIn = !!todayAttendance.checkIn;
-  const isCheckedOut = !!todayAttendance.checkOut;
   const [localCheckIn, setLocalCheckIn] = React.useState(
     todayAttendance.checkIn,
   );
