@@ -4,7 +4,7 @@
 **Document Owner:** Senior UI/UX Designer  
 **Status:** Approved  
 **Last Updated:** July 4, 2026  
-**Reference Docs:** [PRD (PRD.md)](file:///home/aditya/Documents/Projects/odooHackathon/docs/PRD.md) | [Design Spec (DESIGN.md)](file:///home/aditya/Documents/Projects/odooHackathon/docs/DESIGN.md) | [App Flow (FLOW.md)](file:///home/aditya/Documents/Projects/odooHackathon/docs/FLOW.md)
+**Reference Docs:** [PRD (PRD.md)](./PRD.md) | [Design Spec (DESIGN.md)](./DESIGN.md) | [App Flow (FLOW.md)](./FLOW.md)
 
 ---
 
