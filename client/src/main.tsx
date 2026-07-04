@@ -4,11 +4,17 @@ import { createRoot } from "react-dom/client"
 import "./index.css"
 import App from "./App.tsx"
 import { ThemeProvider } from "@/components/theme-provider.tsx"
+import { AuthProvider } from "@/context/auth-context.tsx"
+import { TooltipProvider } from "@/components/ui/tooltip.tsx"
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ThemeProvider>
-      <App />
+      <AuthProvider>
+        <TooltipProvider delayDuration={300}>
+          <App />
+        </TooltipProvider>
+      </AuthProvider>
     </ThemeProvider>
   </StrictMode>
 )
