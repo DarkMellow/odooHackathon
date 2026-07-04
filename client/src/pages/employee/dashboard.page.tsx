@@ -8,9 +8,9 @@ import { StatCard } from "@/components/dashboard/stat-card";
 import { QuickActionCard } from "@/components/dashboard/quick-action-card";
 import { ActivityTimeline } from "@/components/dashboard/activity-timeline";
 import {
-  mockLeaveRequests,
   mockSalary,
 } from "@/data/mock";
+import type { LeaveRequest } from "@/types";
 import {
   User,
   Clock,
@@ -63,26 +63,24 @@ export function EmployeeDashboardPage() {
   const [isSubmittingCheck, setIsSubmittingCheck] = React.useState(false);
   const [attendanceError, setAttendanceError] = React.useState<string | null>(null);
 
-  // Fetch function
+  // Real leave state
+  const [leaveRequests, setLeaveRequests] = React.useState<LeaveRequest[]>([]);
+
+  // Fetch attendance
   const fetchAttendanceData = React.useCallback(async () => {
     try {
       const response = await fetch("/api/employee/attendance/history", {
         method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         credentials: "include",
       });
       const data = await response.json();
       if (data.success) {
         setAttendanceLogs(data.logs || []);
-        
-        // Find today's log (UTC-based logic matching backend)
         const todayStr = new Date().toISOString().slice(0, 10);
         const todayLog = (data.logs || []).find((log: any) =>
           new Date(log.date).toISOString().slice(0, 10) === todayStr
         );
-        
         if (todayLog) {
           setLocalCheckIn(todayLog.checkIn || null);
           setLocalCheckOut(todayLog.checkOut || null);
@@ -98,11 +96,27 @@ export function EmployeeDashboardPage() {
     }
   }, []);
 
+  // Fetch leave requests
+  const fetchLeaveData = React.useCallback(async () => {
+    try {
+      const response = await fetch("/api/employee/leave", {
+        credentials: "include",
+      });
+      const data = await response.json();
+      if (data.success) {
+        setLeaveRequests(data.leaves || []);
+      }
+    } catch (err: any) {
+      // Non-critical — dashboard still works without leave data
+      console.warn("Failed to load leave requests:", err.message);
+    }
+  }, []);
+
   // Initial data load
   React.useEffect(() => {
     let active = true;
     async function loadData() {
-      await fetchAttendanceData();
+      await Promise.all([fetchAttendanceData(), fetchLeaveData()]);
       if (active) {
         setIsLoading(false);
       }
@@ -111,12 +125,10 @@ export function EmployeeDashboardPage() {
     return () => {
       active = false;
     };
-  }, [fetchAttendanceData]);
+  }, [fetchAttendanceData, fetchLeaveData]);
 
-  // Leave stats
-  const pendingLeaves = mockLeaveRequests.filter(
-    (l) => l.status === "PENDING",
-  ).length;
+  // Live leave stats from API
+  const pendingLeaves = leaveRequests.filter((l) => l.status === "PENDING").length;
 
   // Salary
   const salary = mockSalary;
@@ -224,21 +236,37 @@ export function EmployeeDashboardPage() {
       }
     });
 
-    // Merge in mock leave request activities for visual completeness
-    mockLeaveRequests.forEach((leave) => {
+    // Merge in real leave request activities
+    leaveRequests.forEach((leave) => {
+      const leaveLabel = leave.leaveType === "PAID"
+        ? "Paid Leave"
+        : leave.leaveType === "SICK"
+        ? "Sick Leave"
+        : "Unpaid Leave";
+      const startFmt = new Date(leave.startDate).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+      const endFmt = new Date(leave.endDate).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+
       if (leave.status === "APPROVED") {
         list.push({
           id: `leave-approved-${leave.id}`,
           type: "leave",
-          message: `Your Sick Leave for Jul 10 was approved`,
+          message: `Your ${leaveLabel} (${startFmt}${startFmt !== endFmt ? ` – ${endFmt}` : ""}) was approved`,
           timestamp: leave.decisionDate || leave.createdAt,
           status: "success",
+        });
+      } else if (leave.status === "REJECTED") {
+        list.push({
+          id: `leave-rejected-${leave.id}`,
+          type: "leave",
+          message: `Your ${leaveLabel} (${startFmt}${startFmt !== endFmt ? ` – ${endFmt}` : ""}) was rejected`,
+          timestamp: leave.decisionDate || leave.createdAt,
+          status: "warning",
         });
       } else if (leave.status === "PENDING") {
         list.push({
           id: `leave-pending-${leave.id}`,
           type: "leave",
-          message: `You applied for Paid Leave (Jul 20 – Jul 22)`,
+          message: `You applied for ${leaveLabel} (${startFmt}${startFmt !== endFmt ? ` – ${endFmt}` : ""})`,
           timestamp: leave.createdAt,
           status: "info",
         });
@@ -248,7 +276,7 @@ export function EmployeeDashboardPage() {
     // Sort by timestamp descending
     const sorted = list.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
     return sorted.slice(0, 5);
-  }, [attendanceLogs]);
+  }, [attendanceLogs, leaveRequests]);
 
   // ─── Loading skeleton ──────────────────────────────────────
 

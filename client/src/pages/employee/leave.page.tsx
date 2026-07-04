@@ -15,9 +15,13 @@ import {
   CalendarRange,
   ClipboardList,
   AlertTriangle,
+  RefreshCw,
 } from "lucide-react";
-import { mockLeaveRequests } from "@/data/mock";
 import type { LeaveRequest, LeaveType } from "@/types";
+
+// Leave quotas — kept in sync with the backend business rules
+const PAID_QUOTA = 15;
+const SICK_QUOTA = 5;
 
 export function EmployeeLeavePage() {
   const { user } = useAuth();
@@ -35,44 +39,36 @@ export function EmployeeLeavePage() {
   const [endDate, setEndDate] = React.useState("");
   const [remarks, setRemarks] = React.useState("");
   const [formError, setFormError] = React.useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [isWithdrawing, setIsWithdrawing] = React.useState<number | null>(null);
+
+  // ── Fetch all leave requests from the server ──────────────────
+  const fetchLeaves = React.useCallback(async () => {
+    try {
+      const res = await fetch("/api/employee/leave", {
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (data.success) {
+        setRequests(data.leaves);
+      } else {
+        setAlertError(data.message || "Failed to load leave requests.");
+      }
+    } catch (err: any) {
+      setAlertError(err.message || "Network error while loading leaves.");
+    }
+  }, []);
 
   // Initial load
   React.useEffect(() => {
-    if (!user) return;
-
-    const localKey = `leave_requests_${user.id}`;
-    const cached = localStorage.getItem(localKey);
-    let cachedRequests: LeaveRequest[] = [];
-
-    if (cached) {
-      try {
-        cachedRequests = JSON.parse(cached);
-      } catch (e) {
-        console.error("Failed to parse cached leave requests", e);
-      }
+    let active = true;
+    async function load() {
+      await fetchLeaves();
+      if (active) setIsLoading(false);
     }
-
-    // Get all initial mock requests for this user
-    const initialUserRequests = mockLeaveRequests.filter((r) => r.userId === user.id);
-    
-    // Merge: Keep any requests from cachedRequests that are custom (i.e. not in mockLeaveRequests)
-    // plus all initialUserRequests
-    const mockIds = new Set(initialUserRequests.map((r) => r.id));
-    const customRequests = cachedRequests.filter((r) => !mockIds.has(r.id));
-    
-    const finalRequests = [...customRequests, ...initialUserRequests].sort(
-      (a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
-    );
-
-    setRequests(finalRequests);
-    localStorage.setItem(localKey, JSON.stringify(finalRequests));
-
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [user]);
+    load();
+    return () => { active = false; };
+  }, [fetchLeaves]);
 
   if (!user) {
     return (
@@ -82,10 +78,7 @@ export function EmployeeLeavePage() {
     );
   }
 
-  // Calculate leave quotas (Paid quota = 15 days, Sick quota = 5 days)
-  const PAID_QUOTA = 15;
-  const SICK_QUOTA = 5;
-
+  // ── Derived stats ─────────────────────────────────────────────
   const paidDaysUsed = requests
     .filter((r) => r.leaveType === "PAID" && r.status === "APPROVED")
     .reduce((sum, r) => sum + r.totalDays, 0);
@@ -95,11 +88,10 @@ export function EmployeeLeavePage() {
     .reduce((sum, r) => sum + r.totalDays, 0);
 
   const pendingCount = requests.filter((r) => r.status === "PENDING").length;
-
   const paidAvailable = Math.max(0, PAID_QUOTA - paidDaysUsed);
   const sickAvailable = Math.max(0, SICK_QUOTA - sickDaysUsed);
 
-  // Calculate form duration
+  // ── Form duration helper ──────────────────────────────────────
   const calculatedDuration = (() => {
     if (!startDate || !endDate) return 0;
     const start = new Date(startDate);
@@ -110,7 +102,8 @@ export function EmployeeLeavePage() {
     return Math.floor(diff / (1000 * 60 * 60 * 24)) + 1;
   })();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // ── Submit handler ────────────────────────────────────────────
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError(null);
 
@@ -139,89 +132,71 @@ export function EmployeeLeavePage() {
       setFormError("Please provide remarks explaining your request.");
       return;
     }
-
     if (trimmedRemarks.length < 10) {
       setFormError("Remarks must be at least 10 characters long.");
       return;
     }
 
-    const duration = calculatedDuration;
+    setIsSubmitting(true);
+    try {
+      const res = await fetch("/api/employee/leave/apply", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ leaveType, startDate, endDate, employeeRemarks: trimmedRemarks }),
+      });
+      const data = await res.json();
 
-    // Check if leave balance is exceeded
-    if (leaveType === "PAID" && duration > paidAvailable) {
-      setFormError(`Exceeds available Paid Leave quota. You only have ${paidAvailable} days left.`);
-      return;
+      if (data.success) {
+        // Reset form and close modal
+        setStartDate("");
+        setEndDate("");
+        setRemarks("");
+        setIsModalOpen(false);
+        // Re-fetch fresh list from server
+        await fetchLeaves();
+        setAlertSuccess("Leave request submitted successfully!");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        setTimeout(() => setAlertSuccess(null), 4000);
+      } else {
+        // Show server validation errors
+        if (data.details) {
+          setFormError(data.details.map((d: any) => d.message).join(" "));
+        } else {
+          setFormError(data.message || "Failed to submit leave request.");
+        }
+      }
+    } catch (err: any) {
+      setFormError(err.message || "Network error. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
-
-    if (leaveType === "SICK" && duration > sickAvailable) {
-      setFormError(`Exceeds available Sick Leave quota. You only have ${sickAvailable} days left.`);
-      return;
-    }
-
-    // Check for date overlaps in existing requests (excluding WITHDRAWN/REJECTED ones)
-    const overlaps = requests.some((r) => {
-      if (r.status === "WITHDRAWN" || r.status === "REJECTED") return false;
-      const rStart = new Date(r.startDate);
-      const rEnd = new Date(r.endDate);
-      return start <= rEnd && end >= rStart;
-    });
-
-    if (overlaps) {
-      setFormError("This request overlaps with an existing leave application.");
-      return;
-    }
-
-    const newRequest: LeaveRequest = {
-      id: Date.now(),
-      userId: user.id,
-      leaveType,
-      startDate,
-      endDate,
-      totalDays: duration,
-      status: "PENDING",
-      employeeRemarks: trimmedRemarks,
-      reviewedBy: null,
-      hrComments: null,
-      decisionDate: null,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    const updatedRequests = [newRequest, ...requests];
-    setRequests(updatedRequests);
-
-    const localKey = `leave_requests_${user.id}`;
-    localStorage.setItem(localKey, JSON.stringify(updatedRequests));
-
-    // Reset Form & Close Modal
-    setStartDate("");
-    setEndDate("");
-    setRemarks("");
-    setIsModalOpen(false);
-
-    setAlertSuccess("Leave request submitted successfully!");
-    window.scrollTo({ top: 0, behavior: "smooth" });
-    setTimeout(() => setAlertSuccess(null), 3000);
   };
 
-  const handleWithdraw = (id: number) => {
-    const updatedRequests = requests.map((r) => {
-      if (r.id === id) {
-        return {
-          ...r,
-          status: "WITHDRAWN" as const,
-          updatedAt: new Date().toISOString(),
-        };
+  // ── Withdraw handler ──────────────────────────────────────────
+  const handleWithdraw = async (id: number) => {
+    setIsWithdrawing(id);
+    try {
+      const res = await fetch(`/api/employee/leave/${id}/withdraw`, {
+        method: "POST",
+        credentials: "include",
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        await fetchLeaves();
+        setAlertSuccess("Leave request withdrawn.");
+        setTimeout(() => setAlertSuccess(null), 3000);
+      } else {
+        setAlertError(data.message || "Failed to withdraw leave request.");
+        setTimeout(() => setAlertError(null), 4000);
       }
-      return r;
-    });
-
-    setRequests(updatedRequests);
-    const localKey = `leave_requests_${user.id}`;
-    localStorage.setItem(localKey, JSON.stringify(updatedRequests));
-
-    setAlertSuccess("Leave request withdrawn.");
-    setTimeout(() => setAlertSuccess(null), 3000);
+    } catch (err: any) {
+      setAlertError(err.message || "Network error.");
+      setTimeout(() => setAlertError(null), 4000);
+    } finally {
+      setIsWithdrawing(null);
+    }
   };
 
   const statusBadges = {
@@ -231,14 +206,14 @@ export function EmployeeLeavePage() {
     WITHDRAWN: "bg-muted/40 text-muted-foreground border-0 hover:bg-muted/50",
   } as const;
 
-  const formatDateString = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString("en-US", {
+  const formatDateString = (dateStr: string) =>
+    new Date(dateStr).toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
       year: "numeric",
     });
-  };
 
+  // ── Loading skeleton ──────────────────────────────────────────
   if (isLoading) {
     return (
       <div className="space-y-6 pb-20 md:pb-0">
@@ -256,6 +231,7 @@ export function EmployeeLeavePage() {
     );
   }
 
+  // ── Render ────────────────────────────────────────────────────
   return (
     <div className="space-y-6 pb-20 md:pb-0">
       {/* ─── Header ──────────────────────────────────────── */}
@@ -321,10 +297,17 @@ export function EmployeeLeavePage() {
 
       {/* ─── Leaves List ─────────────────────────────────── */}
       <div className="border border-border bg-card rounded-xl overflow-hidden shadow-xs">
-        <div className="p-5 border-b border-border bg-surface-soft/40">
+        <div className="p-5 border-b border-border bg-surface-soft/40 flex items-center justify-between">
           <h2 className="text-sm font-bold text-foreground uppercase tracking-wider">
             Application History
           </h2>
+          <button
+            onClick={fetchLeaves}
+            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <RefreshCw className="size-3.5" />
+            Refresh
+          </button>
         </div>
 
         {requests.length === 0 ? (
@@ -332,13 +315,17 @@ export function EmployeeLeavePage() {
             <CalendarDays className="size-10 text-muted-foreground/40 mb-3" />
             <p className="text-sm font-semibold text-foreground">No leave applications</p>
             <p className="text-xs text-muted-foreground mt-1 max-w-[280px]">
-              You haven't submitted any leave applications yet. Click "New Application" to get started.
+              You haven't submitted any leave applications yet. Click "New Application" to get
+              started.
             </p>
           </div>
         ) : (
           <div className="divide-y divide-border/60">
             {requests.map((req) => (
-              <div key={req.id} className="p-5 flex flex-col md:flex-row md:items-start justify-between gap-4 hover:bg-surface-soft/20 transition-colors">
+              <div
+                key={req.id}
+                className="p-5 flex flex-col md:flex-row md:items-start justify-between gap-4 hover:bg-surface-soft/20 transition-colors"
+              >
                 <div className="space-y-2.5 max-w-2xl">
                   {/* Title block */}
                   <div className="flex flex-wrap items-center gap-2">
@@ -362,7 +349,9 @@ export function EmployeeLeavePage() {
                   {/* Remarks */}
                   {req.employeeRemarks && (
                     <p className="text-xs text-muted-foreground leading-relaxed">
-                      <span className="font-semibold text-foreground/80 block mb-0.5">My Reason:</span>
+                      <span className="font-semibold text-foreground/80 block mb-0.5">
+                        My Reason:
+                      </span>
                       {req.employeeRemarks}
                     </p>
                   )}
@@ -370,28 +359,38 @@ export function EmployeeLeavePage() {
                   {/* HR comments */}
                   {req.hrComments && (
                     <div className="rounded-lg bg-surface-soft/80 border border-border/40 p-3 mt-1.5 text-xs text-muted-foreground leading-relaxed">
-                      <span className="font-semibold text-foreground/80 block mb-0.5">HR Comments:</span>
-                      {req.hrComments}
-                      <span className="block mt-1 text-[10px] text-muted-foreground/60 font-medium">
-                        Reviewed by Alex Rivera on {req.decisionDate ? formatDateString(req.decisionDate) : "Recent Date"}
+                      <span className="font-semibold text-foreground/80 block mb-0.5">
+                        HR Comments:
                       </span>
+                      {req.hrComments}
+                      {req.decisionDate && (
+                        <span className="block mt-1 text-[10px] text-muted-foreground/60 font-medium">
+                          Reviewed on {formatDateString(req.decisionDate)}
+                        </span>
+                      )}
                     </div>
                   )}
                 </div>
 
                 {/* Status Block & Action */}
                 <div className="flex md:flex-col items-center md:items-end justify-between md:justify-start gap-3 shrink-0">
-                  <Badge className={cn("text-xs font-medium py-0.5 px-2.5 capitalize", statusBadges[req.status])}>
+                  <Badge
+                    className={cn(
+                      "text-xs font-medium py-0.5 px-2.5 capitalize",
+                      statusBadges[req.status]
+                    )}
+                  >
                     {req.status.toLowerCase()}
                   </Badge>
 
                   {req.status === "PENDING" && (
                     <Button
                       onClick={() => handleWithdraw(req.id)}
+                      disabled={isWithdrawing === req.id}
                       variant="outline"
                       className="h-7 text-[11px] font-semibold text-destructive hover:bg-destructive/10 hover:text-destructive active:scale-[0.98] transition-all px-2.5 border-destructive/20"
                     >
-                      Withdraw
+                      {isWithdrawing === req.id ? "Withdrawing…" : "Withdraw"}
                     </Button>
                   )}
                 </div>
@@ -407,17 +406,17 @@ export function EmployeeLeavePage() {
           {/* Backdrop */}
           <div
             className="fixed inset-0 bg-black/40 backdrop-blur-xs"
-            onClick={() => setIsModalOpen(false)}
+            onClick={() => !isSubmitting && setIsModalOpen(false)}
           />
 
           {/* Dialog Card */}
           <div className="relative z-10 w-full max-w-md rounded-xl border border-border bg-background p-6 shadow-xl animate-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between border-b border-border/60 pb-3 mb-4">
-              <h3 className="text-sm font-bold text-foreground uppercase tracking-wider flex items-center gap-2">
+              <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">
                 New Leave Application
               </h3>
               <button
-                onClick={() => setIsModalOpen(false)}
+                onClick={() => !isSubmitting && setIsModalOpen(false)}
                 className="size-8 flex items-center justify-center rounded-lg hover:bg-accent text-muted-foreground hover:text-foreground transition-colors focus:outline-none"
               >
                 <X className="size-4" />
@@ -433,10 +432,13 @@ export function EmployeeLeavePage() {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-muted-foreground block">Leave Type</label>
+                <label className="text-xs font-semibold text-muted-foreground block">
+                  Leave Type
+                </label>
                 <select
                   value={leaveType}
                   onChange={(e) => setLeaveType(e.target.value as LeaveType)}
+                  disabled={isSubmitting}
                   className="h-10 px-3 border border-border bg-background text-foreground text-sm rounded-md focus:border-foreground focus:ring-1 focus:ring-foreground focus:outline-none w-full font-medium"
                 >
                   <option value="PAID">Paid Leave</option>
@@ -447,20 +449,26 @@ export function EmployeeLeavePage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-muted-foreground block">Start Date</label>
+                  <label className="text-xs font-semibold text-muted-foreground block">
+                    Start Date
+                  </label>
                   <input
                     type="date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
+                    disabled={isSubmitting}
                     className="h-10 px-3 border border-border bg-background text-foreground text-sm rounded-md focus:border-foreground focus:ring-1 focus:ring-foreground focus:outline-none w-full font-medium"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-muted-foreground block">End Date</label>
+                  <label className="text-xs font-semibold text-muted-foreground block">
+                    End Date
+                  </label>
                   <input
                     type="date"
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
+                    disabled={isSubmitting}
                     className="h-10 px-3 border border-border bg-background text-foreground text-sm rounded-md focus:border-foreground focus:ring-1 focus:ring-foreground focus:outline-none w-full font-medium"
                   />
                 </div>
@@ -476,10 +484,13 @@ export function EmployeeLeavePage() {
               )}
 
               <div className="space-y-1">
-                <label className="text-xs font-semibold text-muted-foreground block">Reason / Remarks</label>
+                <label className="text-xs font-semibold text-muted-foreground block">
+                  Reason / Remarks
+                </label>
                 <textarea
                   value={remarks}
                   onChange={(e) => setRemarks(e.target.value)}
+                  disabled={isSubmitting}
                   className="w-full text-sm text-foreground p-3 border border-border rounded-md bg-background focus:ring-1 focus:ring-foreground focus:outline-none min-h-[90px] resize-none"
                   placeholder="Explain the reason for your time-off request..."
                 />
@@ -489,6 +500,7 @@ export function EmployeeLeavePage() {
                 <Button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
+                  disabled={isSubmitting}
                   variant="outline"
                   className="h-10 font-semibold"
                 >
@@ -496,9 +508,10 @@ export function EmployeeLeavePage() {
                 </Button>
                 <Button
                   type="submit"
+                  disabled={isSubmitting}
                   className="bg-primary text-primary-foreground hover:bg-primary/95 font-semibold h-10 px-5"
                 >
-                  Submit Application
+                  {isSubmitting ? "Submitting…" : "Submit Application"}
                 </Button>
               </div>
             </form>
