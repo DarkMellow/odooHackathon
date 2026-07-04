@@ -15,9 +15,22 @@ import {
   Phone,
   MapPin,
 } from "lucide-react";
-import { mockEmployees } from "@/data/mock";
-import type { MockEmployeeListItem } from "@/data/mock";
 import { EnlargedProfileModal } from "@/components/dashboard/enlarged-profile-modal";
+
+function formatTime(isoString: string | null): string {
+  if (!isoString) return "";
+  try {
+    const d = new Date(isoString);
+    if (isNaN(d.getTime())) return "";
+    return d.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+  } catch (e) {
+    return "";
+  }
+}
 
 // ─── Chart Mock Data by Scope ─────────────────────────────────
 
@@ -64,18 +77,61 @@ export function AttendanceRecordsPage() {
   const [selectedDate, setSelectedDate] = React.useState(new Date().toISOString().slice(0, 10));
   const [searchQuery, setSearchQuery] = React.useState("");
 
-  const [selectedEmployee, setSelectedEmployee] = React.useState<MockEmployeeListItem | null>(null);
-  const [enlargedEmployee, setEnlargedEmployee] = React.useState<MockEmployeeListItem | null>(null);
+  const [selectedEmployee, setSelectedEmployee] = React.useState<any | null>(null);
+  const [enlargedEmployee, setEnlargedEmployee] = React.useState<any | null>(null);
+  const [employees, setEmployees] = React.useState<any[]>([]);
 
   React.useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 500);
-    return () => clearTimeout(timer);
-  }, []);
+    let active = true;
+    async function loadData() {
+      setIsLoading(true);
+      try {
+        const response = await fetch(`/api/employee?date=${selectedDate}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        });
+        const data = await response.json();
+        if (data.success && active) {
+          const mapped = data.employees.map((emp: any) => ({
+            id: emp.id,
+            employeeId: emp.employeeId,
+            fullName: emp.profile?.fullName || "Not Available",
+            department: emp.profile?.department || "Not Available",
+            designation: emp.profile?.designation || "Not Available",
+            attendanceStatus: emp.todayAttendance?.status || "ABSENT",
+            checkIn: emp.todayAttendance?.checkIn || null,
+            checkOut: emp.todayAttendance?.checkOut || null,
+            email: emp.email,
+            dob: emp.profile?.dob || null,
+            phone: emp.profile?.phone || null,
+            address: emp.profile?.address || null,
+            emergencyContact: emp.profile?.emergencyContact || null,
+            reportingManager: emp.profile?.reportingManager || null,
+            dateOfJoining: emp.profile?.dateOfJoining || null,
+          }));
+          setEmployees(mapped);
+        }
+      } catch (err) {
+        console.error("Failed to fetch employees for date", err);
+      } finally {
+        if (active) {
+          setIsLoading(false);
+        }
+      }
+    }
+    loadData();
+    return () => {
+      active = false;
+    };
+  }, [selectedDate]);
 
   const chartData = scope === "weekly" ? weeklyAttendanceData : monthlyAttendanceData;
 
   // Filtered list matching search query
-  const filteredEmployees = mockEmployees.filter((emp) =>
+  const filteredEmployees = employees.filter((emp) =>
     emp.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
     emp.employeeId.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -235,17 +291,9 @@ export function AttendanceRecordsPage() {
               </thead>
               <tbody className="divide-y divide-border/60">
                 {filteredEmployees.map((emp) => {
-                  // Simulate some random present/absent logs based on date
-                  const isWeekend = new Date(selectedDate).getDay() === 0 || new Date(selectedDate).getDay() === 6;
-                  let checkIn = emp.checkIn;
-                  let checkOut = emp.checkOut;
-                  let status = emp.attendanceStatus;
-
-                  if (isWeekend) {
-                    checkIn = null;
-                    checkOut = null;
-                    status = "ABSENT";
-                  }
+                  const checkIn = emp.checkIn;
+                  const checkOut = emp.checkOut;
+                  const status = emp.attendanceStatus;
 
                   return (
                     <tr
@@ -267,10 +315,10 @@ export function AttendanceRecordsPage() {
                         </div>
                       </td>
                       <td className="px-5 py-4 text-muted-foreground">
-                        {checkIn || "—"}
+                        {formatTime(checkIn) || "—"}
                       </td>
                       <td className="px-5 py-4 text-muted-foreground">
-                        {checkOut || "—"}
+                        {formatTime(checkOut) || "—"}
                       </td>
                       <td className="px-5 py-4">
                         <Badge

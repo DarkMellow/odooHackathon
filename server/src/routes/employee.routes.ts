@@ -142,4 +142,80 @@ router.put(
   })
 );
 
+/**
+ * GET /api/employee
+ * Private/Authenticated access. Returns list of all employees with their profiles, current attendance status, and salary structures.
+ */
+router.get(
+  '/',
+  verifyToken,
+  asyncHandler(async (req: Request, res: Response) => {
+    const dateStr = req.query.date as string;
+    let targetDate: Date;
+
+    if (dateStr) {
+      targetDate = new Date(dateStr);
+    } else {
+      const now = new Date();
+      targetDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+    }
+
+    const utcDate = new Date(Date.UTC(targetDate.getUTCFullYear(), targetDate.getUTCMonth(), targetDate.getUTCDate()));
+
+    const employees = await prisma.user.findMany({
+      include: {
+        profile: true,
+        attendances: {
+          where: {
+            date: utcDate,
+          },
+        },
+        salaryStructures: {
+          orderBy: {
+            effectiveDate: 'desc',
+          },
+          take: 1,
+        },
+      },
+    });
+
+    return res.status(200).json({
+      success: true,
+      employees: employees.map((emp) => {
+        const todayAttendance = emp.attendances[0];
+        const salaryStructure = emp.salaryStructures[0];
+        return {
+          id: emp.id,
+          employeeId: emp.employeeId,
+          email: emp.email,
+          role: emp.role,
+          isVerified: emp.isVerified,
+          createdAt: emp.createdAt,
+          updatedAt: emp.updatedAt,
+          profile: emp.profile,
+          todayAttendance: todayAttendance ? {
+            id: todayAttendance.id,
+            userId: todayAttendance.userId,
+            date: todayAttendance.date,
+            checkIn: todayAttendance.checkIn,
+            checkOut: todayAttendance.checkOut,
+            status: todayAttendance.status,
+          } : null,
+          salaryStructures: salaryStructure ? [
+            {
+              id: salaryStructure.id,
+              userId: salaryStructure.userId,
+              baseSalary: Number(salaryStructure.baseSalary),
+              allowances: salaryStructure.allowances,
+              deductions: salaryStructure.deductions,
+              netPay: Number(salaryStructure.netPay),
+              effectiveDate: salaryStructure.effectiveDate,
+            }
+          ] : [],
+        };
+      }),
+    });
+  })
+);
+
 export default router;

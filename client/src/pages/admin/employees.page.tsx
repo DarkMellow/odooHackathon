@@ -17,12 +17,6 @@ import {
   MapPin,
   Briefcase,
 } from "lucide-react";
-import {
-  mockEmployees,
-} from "@/data/mock";
-import type {
-  MockEmployeeListItem,
-} from "@/data/mock";
 import { EnlargedProfileModal } from "@/components/dashboard/enlarged-profile-modal";
 
 const statusColors = {
@@ -51,11 +45,11 @@ export function EmployeesPage() {
   const [isLoading, setIsLoading] = React.useState(true);
   const [searchQuery, setSearchQuery] = React.useState("");
   const [selectedDept, setSelectedDept] = React.useState("All");
-  const [employees, setEmployees] = React.useState<MockEmployeeListItem[]>([]);
+  const [employees, setEmployees] = React.useState<any[]>([]);
   
   // Modal State
-  const [selectedEmployee, setSelectedEmployee] = React.useState<MockEmployeeListItem | null>(null);
-  const [enlargedEmployee, setEnlargedEmployee] = React.useState<MockEmployeeListItem | null>(null);
+  const [selectedEmployee, setSelectedEmployee] = React.useState<any | null>(null);
+  const [enlargedEmployee, setEnlargedEmployee] = React.useState<any | null>(null);
   const [newEmployeeModalOpen, setNewEmployeeModalOpen] = React.useState(false);
 
   // New Employee Form State
@@ -65,11 +59,49 @@ export function EmployeesPage() {
   const [newEmpDesg, setNewEmpDesg] = React.useState("");
 
   React.useEffect(() => {
-    const timer = setTimeout(() => {
-      setEmployees(mockEmployees);
-      setIsLoading(false);
-    }, 500);
-    return () => clearTimeout(timer);
+    let active = true;
+    async function loadData() {
+      try {
+        const response = await fetch("/api/employee", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        });
+        const data = await response.json();
+        if (data.success && active) {
+          const mapped = data.employees.map((emp: any) => ({
+            id: emp.id,
+            employeeId: emp.employeeId,
+            fullName: emp.profile?.fullName || "Not Available",
+            department: emp.profile?.department || "Not Available",
+            designation: emp.profile?.designation || "Not Available",
+            attendanceStatus: emp.todayAttendance?.status || "ABSENT",
+            checkIn: emp.todayAttendance?.checkIn || null,
+            checkOut: emp.todayAttendance?.checkOut || null,
+            email: emp.email,
+            dob: emp.profile?.dob || null,
+            phone: emp.profile?.phone || null,
+            address: emp.profile?.address || null,
+            emergencyContact: emp.profile?.emergencyContact || null,
+            reportingManager: emp.profile?.reportingManager || null,
+            dateOfJoining: emp.profile?.dateOfJoining || null,
+          }));
+          setEmployees(mapped);
+        }
+      } catch (err) {
+        console.error("Failed to fetch employees", err);
+      } finally {
+        if (active) {
+          setIsLoading(false);
+        }
+      }
+    }
+    loadData();
+    return () => {
+      active = false;
+    };
   }, []);
 
   const departments = ["All", ...new Set(employees.map((e) => e.department))];
