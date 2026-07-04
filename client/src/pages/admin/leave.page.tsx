@@ -7,11 +7,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Check, X as XIcon, AlertCircle, CalendarRange } from "lucide-react";
 import {
   mockPendingLeaveRequests,
-  mockEmployees,
 } from "@/data/mock";
 import type {
   MockPendingLeaveRequest,
-  LeaveType,
 } from "@/data/mock";
 
 // Mock count of leaves approved for ranking

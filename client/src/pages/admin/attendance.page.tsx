@@ -2,9 +2,8 @@ import * as React from "react";
 import { InitialsAvatar } from "@/components/ui/initials-avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Clock, Search, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
 import { mockEmployees } from "@/data/mock";
-import type { MockEmployeeListItem } from "@/data/mock";
 
 // ─── Chart Mock Data by Scope ─────────────────────────────────
 

@@ -4,6 +4,7 @@ import type {
   LeaveRequest,
   SalaryStructure,
   ActivityItem,
+  LeaveType,
 } from "@/types";
 
 // ─── Current date helpers ──────────────────────────────────────

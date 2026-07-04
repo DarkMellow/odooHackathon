@@ -1,5 +1,6 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import crypto from 'crypto';
+import { Prisma } from '@prisma/client';
 import { prisma } from '../lib/prisma';
 import { hashPassword, comparePassword } from '../utils/crypto';
 import {
@@ -71,7 +72,7 @@ router.post(
     expiresAt.setHours(expiresAt.getHours() + 24);
 
     // Create user, profile, and verification token in a transaction
-    const newUser = await prisma.$transaction(async (tx) => {
+    const newUser = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const user = await tx.user.create({
         data: {
           employeeId,
@@ -150,7 +151,7 @@ router.get(
     }
 
     // Mark user as verified and delete verification token
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       await tx.user.update({
         where: { id: verificationTokenRecord.userId },
         data: { isVerified: true },

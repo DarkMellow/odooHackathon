@@ -10,6 +10,18 @@ import ForgotPassword from "@/pages/auth/forgotPassword";
 
 export const router = createBrowserRouter([
   {
+    path: "/signin",
+    element: <SignIn />,
+  },
+  {
+    path: "/signup",
+    element: <Signup />,
+  },
+  {
+    path: "/forgot-password",
+    element: <ForgotPassword />,
+  },
+  {
     path: "/",
     element: <AppLayout />,
     children: [
@@ -54,18 +66,6 @@ export const router = createBrowserRouter([
         path: "admin/payroll",
         element: <PlaceholderPage title="Payroll" />,
       },
-      {
-        path: "signin",
-        element: <SignIn />
-      },
-      {
-        path: "signup",
-        element: <Signup />
-      },
-      {
-        path: "forgot-password",
-        element: <ForgotPassword />
-      }
     ],
   },
 ]);

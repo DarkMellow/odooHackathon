@@ -1,4 +1,6 @@
+import * as React from "react";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 function LoginForm() {
   const [formData, setFormData] = useState({
@@ -6,7 +8,7 @@ function LoginForm() {
     password: "",
   });
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
 
     setFormData((prev) => ({
@@ -15,7 +17,7 @@ function LoginForm() {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     console.log("Login Data:", formData);
 
@@ -93,12 +95,12 @@ function LoginForm() {
 
           {/* Forgot Password */}
           <div className="flex justify-end">
-            <button
-              type="button"
+            <Link
+              to="/forgot-password"
               className="text-sm font-medium text-gray-600 transition hover:text-black"
             >
               Forgot password?
-            </button>
+            </Link>
           </div>
 
           {/* Sign In Button */}
@@ -131,12 +133,12 @@ function LoginForm() {
         {/* Footer */}
         <p className="mt-8 text-center text-sm text-gray-600">
           Don't have an account?
-          <button
-            type="button"
-            className="ml-1 font-semibold text-black"
+          <Link
+            to="/signup"
+            className="ml-1 font-semibold text-black hover:underline"
           >
             Sign up
-          </button>
+          </Link>
         </p>
       </div>
     </section>

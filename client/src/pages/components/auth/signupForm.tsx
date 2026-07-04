@@ -1,4 +1,6 @@
+import * as React from "react";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 function SignupForm() {
   const [formData, setFormData] = useState({
@@ -8,7 +10,9 @@ function SignupForm() {
     role: "Employee",
   });
 
-  const handleChange = (e) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
 
     setFormData((prevData) => ({
@@ -17,7 +21,7 @@ function SignupForm() {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     console.log(formData);
@@ -158,12 +162,12 @@ function SignupForm() {
         {/* Footer */}
         <p className="mt-8 text-center text-sm text-gray-600">
           Already have an account?
-          <button
-            type="button"
+          <Link
+            to="/signin"
             className="ml-1 font-semibold text-black hover:underline"
           >
             Sign In
-          </button>
+          </Link>
         </p>
 
       </div>

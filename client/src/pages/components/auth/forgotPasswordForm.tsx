@@ -1,9 +1,11 @@
+import * as React from "react";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 function ForgotPasswordForm() {
   const [email, setEmail] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     console.log("Reset Password Email:", email);
@@ -85,12 +87,12 @@ function ForgotPasswordForm() {
         {/* Back to Login */}
         <p className="text-center text-sm text-gray-600">
           Remember your password?
-          <button
-            type="button"
+          <Link
+            to="/signin"
             className="ml-1 font-semibold text-black hover:underline"
           >
             Sign In
-          </button>
+          </Link>
         </p>
 
       </div>
