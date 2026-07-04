@@ -8,6 +8,8 @@ import SignIn from "@/pages/auth/signIn";
 import Signup from "@/pages/auth/signup";
 import ForgotPassword from "@/pages/auth/forgotPassword";
 import HomePage from "@/pages/home.page";
+import ProtectedRoute from "@/components/ProtectedRoute";
+import VerifyEmailPage from "@/pages/auth/verifyEmail";
 
 export const router = createBrowserRouter([
   {
@@ -19,15 +21,27 @@ export const router = createBrowserRouter([
     element: <SignIn />,
   },
   {
+    path: "/login",
+    element: <Navigate to="/signin" replace />,
+  },
+  {
     path: "/signup",
     element: <Signup />,
+  },
+  {
+    path: "/verify-email",
+    element: <VerifyEmailPage />,
   },
   {
     path: "/forgot-password",
     element: <ForgotPassword />,
   },
   {
-    element: <AppLayout />,
+    element: (
+      <ProtectedRoute>
+        <AppLayout />
+      </ProtectedRoute>
+    ),
     children: [
       {
         path: "dashboard",
@@ -35,19 +49,35 @@ export const router = createBrowserRouter([
       },
       {
         path: "admin/dashboard",
-        element: <Navigate to="/admin/employees" replace />,
+        element: (
+          <ProtectedRoute allowedRoles={["HR"]}>
+            <Navigate to="/admin/employees" replace />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "admin/employees",
-        element: <EmployeesPage />,
+        element: (
+          <ProtectedRoute allowedRoles={["HR"]}>
+            <EmployeesPage />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "admin/attendance",
-        element: <AttendanceRecordsPage />,
+        element: (
+          <ProtectedRoute allowedRoles={["HR"]}>
+            <AttendanceRecordsPage />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "admin/leave",
-        element: <LeaveApprovalsPage />,
+        element: (
+          <ProtectedRoute allowedRoles={["HR"]}>
+            <LeaveApprovalsPage />
+          </ProtectedRoute>
+        ),
       },
       // Placeholder routes — pages to be built in upcoming phases
       {
@@ -64,7 +94,11 @@ export const router = createBrowserRouter([
       },
       {
         path: "admin/payroll",
-        element: <PlaceholderPage title="Payroll" />,
+        element: (
+          <ProtectedRoute allowedRoles={["HR"]}>
+            <PlaceholderPage title="Payroll" />
+          </ProtectedRoute>
+        ),
       },
     ],
   },

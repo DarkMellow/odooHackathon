@@ -1,14 +1,29 @@
 import * as React from "react";
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { ArrowLeft, AlertCircle, Loader2, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuthStore } from "@/stores/auth.store";
 
 function LoginForm() {
+  const navigate = useNavigate();
+  const { login, error, setError, isLoading } = useAuthStore();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
+  const [showPassword, setShowPassword] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({
+    email: "",
+    password: "",
+  });
+
+  // Clear errors when the form unmounts
+  React.useEffect(() => {
+    return () => {
+      setError(null);
+    };
+  }, [setError]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -17,13 +32,58 @@ function LoginForm() {
       ...prev,
       [name]: value,
     }));
+
+    // Reset error when user starts typing
+    if (fieldErrors[name as "email" | "password"]) {
+      setFieldErrors((prev) => ({
+        ...prev,
+        [name]: "",
+      }));
+    }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("Login Data:", formData);
+  const validateForm = () => {
+    const errors = { email: "", password: "" };
+    let isValid = true;
 
-    // TODO: Call login API
+    if (!formData.email) {
+      errors.email = "Email is required";
+      isValid = false;
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      errors.email = "Please enter a valid email address";
+      isValid = false;
+    }
+
+    if (!formData.password) {
+      errors.password = "Password is required";
+      isValid = false;
+    }
+
+    setFieldErrors(errors);
+    return isValid;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validateForm()) return;
+
+    try {
+      const user = await login(formData.email, formData.password);
+      if (user.role === "HR") {
+        navigate("/admin/employees");
+      } else {
+        navigate("/dashboard");
+      }
+    } catch (err: any) {
+      if (err.details) {
+        const errors = { email: "", password: "" };
+        err.details.forEach((issue: any) => {
+          if (issue.field === "email") errors.email = issue.message;
+          if (issue.field === "password") errors.password = issue.message;
+        });
+        setFieldErrors(errors);
+      }
+    }
   };
 
   return (
@@ -59,6 +119,14 @@ function LoginForm() {
           </p>
         </div>
 
+        {/* Error message */}
+        {error && !error.toLowerCase().includes("validation error") && (
+          <div className="mt-4 p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-xs font-medium flex items-start gap-2.5 animate-in fade-in duration-200">
+            <AlertCircle className="size-4 shrink-0 mt-0.5" />
+            <span>{error}</span>
+          </div>
+        )}
+
         {/* Form */}
         <form
           onSubmit={handleSubmit}
@@ -80,9 +148,20 @@ function LoginForm() {
               placeholder="you@example.com"
               value={formData.email}
               onChange={handleChange}
+              disabled={isLoading}
               required
-              className="h-10 w-full rounded-xl border border-border bg-background px-3.5 text-sm outline-none transition focus:border-ring focus:ring-1 focus:ring-ring text-foreground"
+              className={`h-10 w-full rounded-xl border bg-background px-3.5 text-sm outline-none transition focus:ring-1 text-foreground disabled:opacity-50 ${
+                fieldErrors.email
+                  ? "border-destructive focus:border-destructive focus:ring-destructive"
+                  : "border-border focus:border-ring focus:ring-ring"
+              }`}
             />
+            {fieldErrors.email && (
+              <p className="mt-1.5 text-xs text-destructive flex items-center gap-1.5 animate-in fade-in duration-200">
+                <AlertCircle className="size-3.5 shrink-0" />
+                {fieldErrors.email}
+              </p>
+            )}
           </div>
 
           {/* Password */}
@@ -94,16 +173,37 @@ function LoginForm() {
               Password
             </label>
 
-            <input
-              id="password"
-              type="password"
-              name="password"
-              placeholder="Enter your password"
-              value={formData.password}
-              onChange={handleChange}
-              required
-              className="h-10 w-full rounded-xl border border-border bg-background px-3.5 text-sm outline-none transition focus:border-ring focus:ring-1 focus:ring-ring text-foreground"
-            />
+            <div className="relative">
+              <input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                name="password"
+                placeholder="Enter your password"
+                value={formData.password}
+                onChange={handleChange}
+                disabled={isLoading}
+                required
+                className={`h-10 w-full rounded-xl border bg-background pl-3.5 pr-10 text-sm outline-none transition focus:ring-1 text-foreground disabled:opacity-50 ${
+                  fieldErrors.password
+                    ? "border-destructive focus:border-destructive focus:ring-destructive"
+                    : "border-border focus:border-ring focus:ring-ring"
+                }`}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1"
+                disabled={isLoading}
+              >
+                {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+              </button>
+            </div>
+            {fieldErrors.password && (
+              <p className="mt-1.5 text-xs text-destructive flex items-center gap-1.5 animate-in fade-in duration-200">
+                <AlertCircle className="size-3.5 shrink-0" />
+                {fieldErrors.password}
+              </p>
+            )}
           </div>
 
           {/* Forgot Password */}
@@ -120,9 +220,17 @@ function LoginForm() {
           <Button
             type="submit"
             size="lg"
-            className="w-full h-10 font-semibold mt-2 rounded-xl"
+            disabled={isLoading}
+            className="w-full h-10 font-semibold mt-2 rounded-xl flex items-center justify-center gap-1.5"
           >
-            Sign In
+            {isLoading ? (
+              <>
+                <Loader2 className="size-4 animate-spin" />
+                Signing In...
+              </>
+            ) : (
+              "Sign In"
+            )}
           </Button>
         </form>
 
