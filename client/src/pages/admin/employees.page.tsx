@@ -90,6 +90,20 @@ export function EmployeesPage() {
             emergencyContact: emp.profile?.emergencyContact || null,
             reportingManager: emp.profile?.reportingManager || null,
             dateOfJoining: emp.profile?.dateOfJoining || null,
+            about: emp.profile?.about || null,
+            loveAboutJob: emp.profile?.loveAboutJob || null,
+            interestsHobbies: emp.profile?.interestsHobbies || null,
+            skills: emp.profile?.skills || [],
+            certs: emp.profile?.certs || [],
+            nationality: emp.profile?.nationality || null,
+            personalEmail: emp.profile?.personalEmail || null,
+            gender: emp.profile?.gender || null,
+            maritalStatus: emp.profile?.maritalStatus || null,
+            bankAccount: emp.profile?.bankAccount || null,
+            bankName: emp.profile?.bankName || null,
+            ifscCode: emp.profile?.ifscCode || null,
+            panNo: emp.profile?.panNo || null,
+            uanNo: emp.profile?.uanNo || null,
           }));
           setEmployees(mapped);
         }

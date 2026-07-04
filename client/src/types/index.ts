@@ -35,6 +35,22 @@ export interface Profile {
   reportingManager: string | null;
   createdAt: string;
   updatedAt: string;
+
+  // Extended fields
+  about: string | null;
+  loveAboutJob: string | null;
+  interestsHobbies: string | null;
+  skills: string[] | null;
+  certs: string[] | null;
+  nationality: string | null;
+  personalEmail: string | null;
+  gender: string | null;
+  maritalStatus: string | null;
+  bankAccount: string | null;
+  bankName: string | null;
+  ifscCode: string | null;
+  panNo: string | null;
+  uanNo: string | null;
 }
 
 export interface Attendance {

@@ -116,7 +116,27 @@ router.put(
     }
 
     // Extract only permitted fields for updating
-    const { phone, address, profilePictureUrl, dob, emergencyContact } = req.body;
+    const {
+      phone,
+      address,
+      profilePictureUrl,
+      dob,
+      emergencyContact,
+      about,
+      loveAboutJob,
+      interestsHobbies,
+      skills,
+      certs,
+      nationality,
+      personalEmail,
+      gender,
+      maritalStatus,
+      bankAccount,
+      bankName,
+      ifscCode,
+      panNo,
+      uanNo,
+    } = req.body;
 
     const updatedProfile = await prisma.profile.update({
       where: { userId },
@@ -126,6 +146,20 @@ router.put(
         profilePictureUrl,
         dob,
         emergencyContact,
+        about,
+        loveAboutJob,
+        interestsHobbies,
+        skills: skills !== undefined ? skills : undefined,
+        certs: certs !== undefined ? certs : undefined,
+        nationality,
+        personalEmail,
+        gender,
+        maritalStatus,
+        bankAccount,
+        bankName,
+        ifscCode,
+        panNo,
+        uanNo,
       },
       include: {
         user: {

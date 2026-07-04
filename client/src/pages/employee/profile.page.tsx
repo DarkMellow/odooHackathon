@@ -85,62 +85,29 @@ export function EmployeeProfilePage() {
   React.useEffect(() => {
     if (!user) return;
 
-    const localKey = `profile_extended_${user.id}`;
-    const cached = localStorage.getItem(localKey);
-    let initialExtended: Partial<ExtendedProfile> = {};
-
-    if (cached) {
-      try {
-        initialExtended = JSON.parse(cached);
-      } catch (e) {
-        console.error("Failed to parse cached profile", e);
-      }
-    }
-
     const defaultDob = user.profile.dob
       ? new Date(user.profile.dob).toISOString().split("T")[0]
-      : "1995-03-15";
+      : "";
 
     setProfileData({
-      about:
-        initialExtended.about ??
-        "Jane is a Senior Frontend Engineer with 5+ years of experience specializing in building premium user experiences, designs, and high-performance Web apps. She is dedicated, detail-oriented, and loves collaborating on design systems.",
-      loveAboutJob:
-        initialExtended.loveAboutJob ??
-        "I love bringing interactive user interfaces to life. Bridging the gap between design and engineering, crafting micro-animations, and building performant dashboard products that delight users every day.",
-      interestsHobbies:
-        initialExtended.interestsHobbies ??
-        "Exploring coastal hiking trails, photographing architecture, playing acoustic guitar, experimenting with creative coding, and reading sci-fi novels.",
-      skills: initialExtended.skills ?? [
-        "React",
-        "TypeScript",
-        "Tailwind CSS",
-        "Vite",
-        "Node.js",
-      ],
-      certs: initialExtended.certs ?? [
-        "AWS Certified Cloud Practitioner",
-        "Scrum Alliance CSM",
-      ],
-      dob: initialExtended.dob ?? defaultDob,
-      nationality: initialExtended.nationality ?? "American",
-      personalEmail: initialExtended.personalEmail ?? user.email,
-      gender: initialExtended.gender ?? "Female",
-      maritalStatus: initialExtended.maritalStatus ?? "Married",
-      phone: user.profile.phone ?? initialExtended.phone ?? "+1 (555) 012-3456",
-      address:
-        user.profile.address ??
-        initialExtended.address ??
-        "42 Elm Street, Apt 3B, San Francisco, CA 94102",
-      emergencyContact:
-        user.profile.emergencyContact ??
-        initialExtended.emergencyContact ??
-        "John Doe — +1 (555) 987-6543",
-      bankAccount: initialExtended.bankAccount ?? "120987342012",
-      bankName: initialExtended.bankName ?? "Chase Bank",
-      ifscCode: initialExtended.ifscCode ?? "CHAS0123456",
-      panNo: initialExtended.panNo ?? "ABCDE1234F",
-      uanNo: initialExtended.uanNo ?? "100987654321",
+      about: user.profile.about ?? "",
+      loveAboutJob: user.profile.loveAboutJob ?? "",
+      interestsHobbies: user.profile.interestsHobbies ?? "",
+      skills: user.profile.skills ?? [],
+      certs: user.profile.certs ?? [],
+      dob: defaultDob,
+      nationality: user.profile.nationality ?? "",
+      personalEmail: user.profile.personalEmail ?? "",
+      gender: user.profile.gender ?? "",
+      maritalStatus: user.profile.maritalStatus ?? "",
+      phone: user.profile.phone ?? "",
+      address: user.profile.address ?? "",
+      emergencyContact: user.profile.emergencyContact ?? "",
+      bankAccount: user.profile.bankAccount ?? "",
+      bankName: user.profile.bankName ?? "",
+      ifscCode: user.profile.ifscCode ?? "",
+      panNo: user.profile.panNo ?? "",
+      uanNo: user.profile.uanNo ?? "",
     });
 
     const timer = setTimeout(() => {
@@ -189,16 +156,32 @@ export function EmployeeProfilePage() {
     setSaveError(null);
 
     try {
-      // 1. Persist the database-backed fields via the server endpoint
+      // 1. Persist all profile fields via the server endpoint
       const response = await fetch("/api/employee/profile", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          phone: editedData.phone,
-          address: editedData.address,
-          profilePictureUrl: user.profile.profilePictureUrl,
+          phone: editedData.phone || null,
+          address: editedData.address || null,
+          profilePictureUrl: user.profile.profilePictureUrl || null,
+          dob: editedData.dob || null,
+          emergencyContact: editedData.emergencyContact || null,
+          about: editedData.about || null,
+          loveAboutJob: editedData.loveAboutJob || null,
+          interestsHobbies: editedData.interestsHobbies || null,
+          skills: editedData.skills || [],
+          certs: editedData.certs || [],
+          nationality: editedData.nationality || null,
+          personalEmail: editedData.personalEmail || null,
+          gender: editedData.gender || null,
+          maritalStatus: editedData.maritalStatus || null,
+          bankAccount: editedData.bankAccount || null,
+          bankName: editedData.bankName || null,
+          ifscCode: editedData.ifscCode || null,
+          panNo: editedData.panNo || null,
+          uanNo: editedData.uanNo || null,
         }),
         credentials: "include",
       });
@@ -208,14 +191,7 @@ export function EmployeeProfilePage() {
         throw new Error(errorData.message || "Failed to save database profile properties");
       }
 
-      // 2. Persist mock fields in localStorage
-      const localKey = `profile_extended_${user.id}`;
-      localStorage.setItem(localKey, JSON.stringify(editedData));
-
-      // 3. Update the frontend in-memory state
-      setProfileData(editedData);
-
-      // 4. Update standard auth context variables from the server
+      // 2. Update standard auth context variables from the server
       await checkAuth();
 
       setSaveSuccess("Profile updated successfully!");
@@ -504,7 +480,7 @@ export function EmployeeProfilePage() {
                 </h3>
                 {!isEditing ? (
                   <p className="text-xs text-muted-foreground leading-relaxed whitespace-pre-line">
-                    {profileData.about}
+                    {profileData.about || "Not Available"}
                   </p>
                 ) : (
                   <textarea
@@ -522,7 +498,7 @@ export function EmployeeProfilePage() {
                 </h3>
                 {!isEditing ? (
                   <p className="text-xs text-muted-foreground leading-relaxed whitespace-pre-line">
-                    {profileData.loveAboutJob}
+                    {profileData.loveAboutJob || "Not Available"}
                   </p>
                 ) : (
                   <textarea
@@ -540,7 +516,7 @@ export function EmployeeProfilePage() {
                 </h3>
                 {!isEditing ? (
                   <p className="text-xs text-muted-foreground leading-relaxed whitespace-pre-line">
-                    {profileData.interestsHobbies}
+                    {profileData.interestsHobbies || "Not Available"}
                   </p>
                 ) : (
                   <textarea
@@ -578,23 +554,27 @@ export function EmployeeProfilePage() {
                 )}
 
                 <div className="flex flex-wrap gap-1.5">
-                  {(isEditing ? editedData?.skills : profileData.skills)?.map((skill) => (
-                    <Badge
-                      key={skill}
-                      variant="secondary"
-                      className="text-xs py-0.5 pl-2 pr-1 flex items-center gap-1 border border-border/40"
-                    >
-                      {skill}
-                      {isEditing && (
-                        <button
-                          onClick={() => removeSkill(skill)}
-                          className="hover:bg-muted rounded-full p-0.5 focus:outline-none"
-                        >
-                          <X className="size-3 text-muted-foreground hover:text-foreground" />
-                        </button>
-                      )}
-                    </Badge>
-                  ))}
+                  {(isEditing ? editedData?.skills : profileData.skills)?.length ? (
+                    (isEditing ? editedData?.skills : profileData.skills)?.map((skill) => (
+                      <Badge
+                        key={skill}
+                        variant="secondary"
+                        className="text-xs py-0.5 pl-2 pr-1 flex items-center gap-1 border border-border/40"
+                      >
+                        {skill}
+                        {isEditing && (
+                          <button
+                            onClick={() => removeSkill(skill)}
+                            className="hover:bg-muted rounded-full p-0.5 focus:outline-none"
+                          >
+                            <X className="size-3 text-muted-foreground hover:text-foreground" />
+                          </button>
+                        )}
+                      </Badge>
+                    ))
+                  ) : (
+                    <span className="text-xs text-muted-foreground">Not Available</span>
+                  )}
                 </div>
               </div>
 
@@ -620,22 +600,26 @@ export function EmployeeProfilePage() {
                 )}
 
                 <div className="space-y-2">
-                  {(isEditing ? editedData?.certs : profileData.certs)?.map((cert) => (
-                    <div
-                      key={cert}
-                      className="flex items-center justify-between text-xs text-muted-foreground p-2 bg-muted/20 border border-border/40 rounded-md"
-                    >
-                      <span>{cert}</span>
-                      {isEditing && (
-                        <button
-                          onClick={() => removeCert(cert)}
-                          className="hover:text-destructive p-1 rounded transition-colors focus:outline-none"
-                        >
-                          <Trash2 className="size-3.5" />
-                        </button>
-                      )}
-                    </div>
-                  ))}
+                  {(isEditing ? editedData?.certs : profileData.certs)?.length ? (
+                    (isEditing ? editedData?.certs : profileData.certs)?.map((cert) => (
+                      <div
+                        key={cert}
+                        className="flex items-center justify-between text-xs text-muted-foreground p-2 bg-muted/20 border border-border/40 rounded-md"
+                      >
+                        <span>{cert}</span>
+                        {isEditing && (
+                          <button
+                            onClick={() => removeCert(cert)}
+                            className="hover:text-destructive p-1 rounded transition-colors focus:outline-none"
+                          >
+                            <Trash2 className="size-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <span className="text-xs text-muted-foreground">Not Available</span>
+                  )}
                 </div>
               </div>
             </div>
@@ -662,7 +646,7 @@ export function EmployeeProfilePage() {
                           day: "numeric",
                           year: "numeric",
                         })
-                        : "March 15, 1995"}
+                        : "Not Available"}
                     </span>
                   ) : (
                     <input
@@ -678,7 +662,7 @@ export function EmployeeProfilePage() {
                   <span className="block font-semibold text-muted-foreground">Nationality</span>
                   {!isEditing ? (
                     <span className="block text-foreground font-medium text-sm">
-                      {profileData.nationality}
+                      {profileData.nationality || "Not Available"}
                     </span>
                   ) : (
                     <input
@@ -694,7 +678,7 @@ export function EmployeeProfilePage() {
                   <span className="block font-semibold text-muted-foreground">Personal Email</span>
                   {!isEditing ? (
                     <span className="block text-foreground font-medium text-sm">
-                      {profileData.personalEmail}
+                      {profileData.personalEmail || "Not Available"}
                     </span>
                   ) : (
                     <input
@@ -710,7 +694,7 @@ export function EmployeeProfilePage() {
                   <span className="block font-semibold text-muted-foreground">Gender</span>
                   {!isEditing ? (
                     <span className="block text-foreground font-medium text-sm">
-                      {profileData.gender}
+                      {profileData.gender || "Not Available"}
                     </span>
                   ) : (
                     <select
@@ -730,7 +714,7 @@ export function EmployeeProfilePage() {
                   <span className="block font-semibold text-muted-foreground">Marital Status</span>
                   {!isEditing ? (
                     <span className="block text-foreground font-medium text-sm">
-                      {profileData.maritalStatus}
+                      {profileData.maritalStatus || "Not Available"}
                     </span>
                   ) : (
                     <select
@@ -757,7 +741,7 @@ export function EmployeeProfilePage() {
                   <span className="block font-semibold text-muted-foreground">Phone Number</span>
                   {!isEditing ? (
                     <span className="block text-foreground font-medium text-sm">
-                      {profileData.phone}
+                      {profileData.phone || "Not Available"}
                     </span>
                   ) : (
                     <input
@@ -773,7 +757,7 @@ export function EmployeeProfilePage() {
                   <span className="block font-semibold text-muted-foreground">Emergency Contact</span>
                   {!isEditing ? (
                     <span className="block text-foreground font-medium text-sm">
-                      {profileData.emergencyContact}
+                      {profileData.emergencyContact || "Not Available"}
                     </span>
                   ) : (
                     <input
@@ -789,7 +773,7 @@ export function EmployeeProfilePage() {
                   <span className="block font-semibold text-muted-foreground">Residing Address</span>
                   {!isEditing ? (
                     <span className="block text-foreground font-medium text-sm leading-relaxed">
-                      {profileData.address}
+                      {profileData.address || "Not Available"}
                     </span>
                   ) : (
                     <textarea
@@ -813,7 +797,7 @@ export function EmployeeProfilePage() {
                   <span className="block font-semibold text-muted-foreground">Account Number</span>
                   {!isEditing ? (
                     <span className="block text-foreground font-medium text-sm">
-                      {profileData.bankAccount}
+                      {profileData.bankAccount || "Not Available"}
                     </span>
                   ) : (
                     <input
@@ -829,7 +813,7 @@ export function EmployeeProfilePage() {
                   <span className="block font-semibold text-muted-foreground">Bank Name</span>
                   {!isEditing ? (
                     <span className="block text-foreground font-medium text-sm">
-                      {profileData.bankName}
+                      {profileData.bankName || "Not Available"}
                     </span>
                   ) : (
                     <input
@@ -845,7 +829,7 @@ export function EmployeeProfilePage() {
                   <span className="block font-semibold text-muted-foreground">IFSC Code</span>
                   {!isEditing ? (
                     <span className="block text-foreground font-medium text-sm font-mono">
-                      {profileData.ifscCode}
+                      {profileData.ifscCode || "Not Available"}
                     </span>
                   ) : (
                     <input
@@ -861,7 +845,7 @@ export function EmployeeProfilePage() {
                   <span className="block font-semibold text-muted-foreground">PAN No</span>
                   {!isEditing ? (
                     <span className="block text-foreground font-medium text-sm font-mono">
-                      {profileData.panNo}
+                      {profileData.panNo || "Not Available"}
                     </span>
                   ) : (
                     <input
@@ -877,7 +861,7 @@ export function EmployeeProfilePage() {
                   <span className="block font-semibold text-muted-foreground">UAN NO</span>
                   {!isEditing ? (
                     <span className="block text-foreground font-medium text-sm font-mono">
-                      {profileData.uanNo}
+                      {profileData.uanNo || "Not Available"}
                     </span>
                   ) : (
                     <input

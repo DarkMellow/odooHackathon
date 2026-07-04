@@ -111,6 +111,20 @@ async function main() {
           designation: 'HR Manager',
           dateOfJoining: new Date('2022-06-01'),
           reportingManager: null,
+          about: 'Experienced HR Manager specialized in talent acquisition, employee relations, and building strong organizational cultures.',
+          loveAboutJob: 'Helping people grow and thrive in their careers.',
+          interestsHobbies: 'Cycling, culinary arts, and volunteering.',
+          skills: ['Talent Acquisition', 'Employee Relations', 'Leadership'],
+          certs: ['SHRM-CP'],
+          nationality: 'American',
+          personalEmail: 'alex.rivera.personal@example.com',
+          gender: 'Male',
+          maritalStatus: 'Married',
+          bankAccount: '987654321012',
+          bankName: 'Wells Fargo',
+          ifscCode: 'WELS0987654',
+          panNo: 'XYZWV5678A',
+          uanNo: '200987654321',
         },
       },
       salaryStructures: {
@@ -131,7 +145,7 @@ async function main() {
     },
   });
   console.log('Created HR Manager: Alex Rivera (hr@company.com)');
-
+ 
   // 2. Create Jane Doe (Senior Frontend Engineer)
   const jane = await prisma.user.create({
     data: {
@@ -151,6 +165,20 @@ async function main() {
           designation: 'Senior Frontend Engineer',
           dateOfJoining: new Date('2024-01-15'),
           reportingManager: 'Alex Rivera',
+          about: 'Jane is a Senior Frontend Engineer with 5+ years of experience specializing in building premium user experiences, designs, and high-performance Web apps. She is dedicated, detail-oriented, and loves collaborating on design systems.',
+          loveAboutJob: 'I love bringing interactive user interfaces to life. Bridging the gap between design and engineering, crafting micro-animations, and building performant dashboard products that delight users every day.',
+          interestsHobbies: 'Exploring coastal hiking trails, photographing architecture, playing acoustic guitar, experimenting with creative coding, and reading sci-fi novels.',
+          skills: ['React', 'TypeScript', 'Tailwind CSS', 'Vite', 'Node.js'],
+          certs: ['AWS Certified Cloud Practitioner', 'Scrum Alliance CSM'],
+          nationality: 'American',
+          personalEmail: 'jane.doe.personal@example.com',
+          gender: 'Female',
+          maritalStatus: 'Married',
+          bankAccount: '120987342012',
+          bankName: 'Chase Bank',
+          ifscCode: 'CHAS0123456',
+          panNo: 'ABCDE1234F',
+          uanNo: '100987654321',
         },
       },
       salaryStructures: {

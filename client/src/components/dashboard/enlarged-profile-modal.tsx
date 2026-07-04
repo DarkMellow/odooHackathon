@@ -30,8 +30,8 @@ export function EnlargedProfileModal({
   const [activeTab, setActiveTab] = React.useState<"resume" | "private" | "salary">("resume");
 
   // Resume State (Read-only for HR view)
-  const [skills] = React.useState<string[]>(["React", "TypeScript", "Tailwind CSS", "Vite", "Node.js"]);
-  const [certs] = React.useState<string[]>(["AWS Certified Cloud Practitioner", "Scrum Alliance CSM"]);
+  const skills: string[] = employee.skills || [];
+  const certs: string[] = employee.certs || [];
 
   // Salary Calculations State (Interactive)
   const [monthWage, setMonthWage] = React.useState<number>(50000);
@@ -170,7 +170,7 @@ export function EnlargedProfileModal({
                     About Employee
                   </h3>
                   <p className="text-xs text-muted-foreground leading-relaxed">
-                    {employee.designation ? `${employee.fullName} works as a ${employee.designation} in the ${employee.department || ""} department.` : "Not Available"}
+                    {employee.about || "Not Available"}
                   </p>
                 </div>
 
@@ -179,7 +179,7 @@ export function EnlargedProfileModal({
                     What I love about my job
                   </h3>
                   <p className="text-xs text-muted-foreground leading-relaxed">
-                    Not Available
+                    {employee.loveAboutJob || "Not Available"}
                   </p>
                 </div>
 
@@ -188,7 +188,7 @@ export function EnlargedProfileModal({
                     My interests and hobbies
                   </h3>
                   <p className="text-xs text-muted-foreground leading-relaxed">
-                    Not Available
+                    {employee.interestsHobbies || "Not Available"}
                   </p>
                 </div>
               </div>
@@ -201,11 +201,15 @@ export function EnlargedProfileModal({
                     Skills
                   </h3>
                   <div className="flex flex-wrap gap-1.5">
-                    {skills.map((skill) => (
-                      <Badge key={skill} variant="secondary" className="text-xs py-0.5 border border-border/40">
-                        {skill}
-                      </Badge>
-                    ))}
+                    {skills.length > 0 ? (
+                      skills.map((skill) => (
+                        <Badge key={skill} variant="secondary" className="text-xs py-0.5 border border-border/40">
+                          {skill}
+                        </Badge>
+                      ))
+                    ) : (
+                      <span className="text-xs text-muted-foreground">Not Available</span>
+                    )}
                   </div>
                 </div>
 
@@ -215,11 +219,15 @@ export function EnlargedProfileModal({
                     Certifications
                   </h3>
                   <div className="space-y-2">
-                    {certs.map((cert) => (
-                      <div key={cert} className="text-xs text-muted-foreground p-2 bg-muted/30 border border-border/40 rounded">
-                        {cert}
-                      </div>
-                    ))}
+                    {certs.length > 0 ? (
+                      certs.map((cert) => (
+                        <div key={cert} className="text-xs text-muted-foreground p-2 bg-muted/30 border border-border/40 rounded">
+                          {cert}
+                        </div>
+                      ))
+                    ) : (
+                      <span className="text-xs text-muted-foreground">Not Available</span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -253,11 +261,11 @@ export function EnlargedProfileModal({
                   </div>
                   <div className="space-y-1">
                     <span className="block font-semibold text-muted-foreground">Gender</span>
-                    <span className="block text-foreground font-medium text-sm">Not Available</span>
+                    <span className="block text-foreground font-medium text-sm">{employee.gender || "Not Available"}</span>
                   </div>
                   <div className="space-y-1">
                     <span className="block font-semibold text-muted-foreground">Marital Status</span>
-                    <span className="block text-foreground font-medium text-sm">Not Available</span>
+                    <span className="block text-foreground font-medium text-sm">{employee.maritalStatus || "Not Available"}</span>
                   </div>
                   <div className="space-y-1">
                     <span className="block font-semibold text-muted-foreground">Date of Joining</span>
@@ -265,7 +273,7 @@ export function EnlargedProfileModal({
                   </div>
                   <div className="space-y-1">
                     <span className="block font-semibold text-muted-foreground">Nationality</span>
-                    <span className="block text-foreground font-medium text-sm">Not Available</span>
+                    <span className="block text-foreground font-medium text-sm">{employee.nationality || "Not Available"}</span>
                   </div>
                   <div className="space-y-1 sm:col-span-2">
                     <span className="block font-semibold text-muted-foreground">Residing Address</span>
@@ -284,23 +292,23 @@ export function EnlargedProfileModal({
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-1">
                     <span className="block font-semibold text-muted-foreground">Account Number</span>
-                    <span className="block text-foreground font-medium text-sm">Not Available</span>
+                    <span className="block text-foreground font-medium text-sm">{employee.bankAccount || "Not Available"}</span>
                   </div>
                   <div className="space-y-1">
                     <span className="block font-semibold text-muted-foreground">Bank Name</span>
-                    <span className="block text-foreground font-medium text-sm">Not Available</span>
+                    <span className="block text-foreground font-medium text-sm">{employee.bankName || "Not Available"}</span>
                   </div>
                   <div className="space-y-1">
                     <span className="block font-semibold text-muted-foreground">IFSC Code</span>
-                    <span className="block text-foreground font-medium text-sm">Not Available</span>
+                    <span className="block text-foreground font-medium text-sm">{employee.ifscCode || "Not Available"}</span>
                   </div>
                   <div className="space-y-1">
                     <span className="block font-semibold text-muted-foreground">PAN No</span>
-                    <span className="block text-foreground font-medium text-sm">Not Available</span>
+                    <span className="block text-foreground font-medium text-sm">{employee.panNo || "Not Available"}</span>
                   </div>
                   <div className="space-y-1">
                     <span className="block font-semibold text-muted-foreground">UAN NO</span>
-                    <span className="block text-foreground font-medium text-sm">Not Available</span>
+                    <span className="block text-foreground font-medium text-sm">{employee.uanNo || "Not Available"}</span>
                   </div>
                   <div className="space-y-1">
                     <span className="block font-semibold text-muted-foreground">Emp Code</span>

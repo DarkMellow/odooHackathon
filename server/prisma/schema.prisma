@@ -65,6 +65,23 @@ model Profile {
   designation       String?  @db.VarChar(100)
   dateOfJoining     DateTime? @map("date_of_joining") @db.Date
   reportingManager  String?  @map("reporting_manager") @db.VarChar(100)
+  
+  // Extended fields
+  about             String?   @db.Text
+  loveAboutJob      String?   @map("love_about_job") @db.Text
+  interestsHobbies  String?   @map("interests_hobbies") @db.Text
+  skills            Json?
+  certs             Json?
+  nationality       String?   @db.VarChar(100)
+  personalEmail     String?   @map("personal_email") @db.VarChar(255)
+  gender            String?   @db.VarChar(50)
+  maritalStatus     String?   @map("marital_status") @db.VarChar(50)
+  bankAccount       String?   @map("bank_account") @db.VarChar(50)
+  bankName          String?   @map("bank_name") @db.VarChar(100)
+  ifscCode          String?   @map("ifsc_code") @db.VarChar(20)
+  panNo             String?   @map("pan_no") @db.VarChar(20)
+  uanNo             String?   @map("uan_no") @db.VarChar(20)
+
   createdAt         DateTime @default(now()) @map("created_at") @db.Timestamp
   updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamp
 

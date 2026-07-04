@@ -29,6 +29,83 @@ export const updateProfileSchema = z.object({
     .trim()
     .optional()
     .nullable(),
+  about: z
+    .string()
+    .trim()
+    .optional()
+    .nullable(),
+  loveAboutJob: z
+    .string()
+    .trim()
+    .optional()
+    .nullable(),
+  interestsHobbies: z
+    .string()
+    .trim()
+    .optional()
+    .nullable(),
+  skills: z
+    .array(z.string())
+    .optional()
+    .nullable(),
+  certs: z
+    .array(z.string())
+    .optional()
+    .nullable(),
+  nationality: z
+    .string()
+    .max(100, 'Nationality must not exceed 100 characters')
+    .trim()
+    .optional()
+    .nullable(),
+  personalEmail: z
+    .string()
+    .max(255, 'Personal email must not exceed 255 characters')
+    .trim()
+    .optional()
+    .nullable(),
+  gender: z
+    .string()
+    .max(50, 'Gender must not exceed 50 characters')
+    .trim()
+    .optional()
+    .nullable(),
+  maritalStatus: z
+    .string()
+    .max(50, 'Marital status must not exceed 50 characters')
+    .trim()
+    .optional()
+    .nullable(),
+  bankAccount: z
+    .string()
+    .max(50, 'Bank account number must not exceed 50 characters')
+    .trim()
+    .optional()
+    .nullable(),
+  bankName: z
+    .string()
+    .max(100, 'Bank name must not exceed 100 characters')
+    .trim()
+    .optional()
+    .nullable(),
+  ifscCode: z
+    .string()
+    .max(20, 'IFSC code must not exceed 20 characters')
+    .trim()
+    .optional()
+    .nullable(),
+  panNo: z
+    .string()
+    .max(20, 'PAN number must not exceed 20 characters')
+    .trim()
+    .optional()
+    .nullable(),
+  uanNo: z
+    .string()
+    .max(20, 'UAN must not exceed 20 characters')
+    .trim()
+    .optional()
+    .nullable(),
 });
 
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
