@@ -16,7 +16,6 @@ import {
   User,
   Users,
   ClipboardList,
-  Banknote,
   LogOut,
   ArrowLeftRight,
   Menu,

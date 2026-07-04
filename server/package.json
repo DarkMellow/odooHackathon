@@ -9,14 +9,14 @@
     "preview": "node dist/index.js"
   },
   "dependencies": {
-    "express": "^4.19.2",
-    "odooHackathon": "file:..",
     "@prisma/adapter-mariadb": "^7.8.0",
     "@prisma/client": "^7.8.0",
     "bcryptjs": "^3.0.3",
     "cookie-parser": "^1.4.7",
+    "express": "^4.19.2",
     "jsonwebtoken": "^9.0.3",
     "mariadb": "^3.5.3",
+    "odooHackathon": "file:..",
     "zod": "^4.4.3"
   },
   "devDependencies": {
