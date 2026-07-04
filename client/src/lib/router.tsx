@@ -10,6 +10,7 @@ import Signup from "@/pages/auth/signup";
 import ForgotPassword from "@/pages/auth/forgotPassword";
 import HomePage from "@/pages/home.page";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import GuestRoute from "@/components/GuestRoute";
 import VerifyEmailPage from "@/pages/auth/verifyEmail";
 
 export const router = createBrowserRouter([
@@ -19,7 +20,11 @@ export const router = createBrowserRouter([
   },
   {
     path: "/signin",
-    element: <SignIn />,
+    element: (
+      <GuestRoute>
+        <SignIn />
+      </GuestRoute>
+    ),
   },
   {
     path: "/login",
@@ -27,7 +32,11 @@ export const router = createBrowserRouter([
   },
   {
     path: "/signup",
-    element: <Signup />,
+    element: (
+      <GuestRoute>
+        <Signup />
+      </GuestRoute>
+    ),
   },
   {
     path: "/verify-email",
@@ -35,7 +44,11 @@ export const router = createBrowserRouter([
   },
   {
     path: "/forgot-password",
-    element: <ForgotPassword />,
+    element: (
+      <GuestRoute>
+        <ForgotPassword />
+      </GuestRoute>
+    ),
   },
   {
     element: (
